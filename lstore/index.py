@@ -2,6 +2,8 @@
 A data strucutre holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
 """
 
+from BTrees.OOBTree import OOBTree
+
 class Index:
 
     def __init__(self, table):
@@ -14,6 +16,8 @@ class Index:
     """
 
     def locate(self, column, value):
+        tree = self.indices[column]
+        return tree[value]
         pass
 
     """
@@ -28,6 +32,10 @@ class Index:
     """
 
     def create_index(self, column_number):
+        if self.indices[column_number] == None:
+            self.indices[column_number] == OOBTree()
+        else:
+            print("Column index already created")
         pass
 
     """
@@ -35,4 +43,5 @@ class Index:
     """
 
     def drop_index(self, column_number):
+        self.indices[column_number] = None
         pass
