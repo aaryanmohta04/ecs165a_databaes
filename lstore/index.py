@@ -25,6 +25,11 @@ class Index:
     """
 
     def locate_range(self, begin, end, column):
+        tree = self.indices[column]
+        RID_arr = []
+        for RID in list(tree.values(min=begin, max=end)):
+            RID_arr += RID
+        return RID_arr
         pass
 
     """
