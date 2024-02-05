@@ -10,6 +10,9 @@ class Index:
         # One index for each table. All our empty initially.
         self.indices = [None] *  table.num_columns
         pass
+    
+    def get_index(self, column_number):
+        return self.indices[column_number]
 
     """
     # returns the location of all records with the given value on column "column"
