@@ -34,8 +34,13 @@ class PageRange:
         # 16 base pages / page range
         self.num_base_pages = 0
         self.num_tail_pages = 0
+        #maybe the RID of the first record is the page range id? if we even need one
+        self.id = 0
         self.base_pages = [None] * 16
         self.tail_pages = [None]
+        
+    def create_page_range(self, cur_table_records):
+        self.id = cur_table_records + 1
 
     def has_capacity(self):
         if self.num_base_pages < MAX_PAGES_PER_RANGE:
