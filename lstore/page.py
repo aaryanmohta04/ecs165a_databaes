@@ -43,6 +43,6 @@ class PageRange:
         else:
             return false
 
-    def add_page(self, page)
+    def add_page(self, page):
         self.num_base_page += 1
         pass
