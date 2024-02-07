@@ -44,9 +44,14 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, search_key, search_key_index, projected_columns_index):
-        # Are all table column indexes already created?
+        if self.table.index.has_index(search_key_index) == False:
+            self.table.index.create_index(search_key_index)
+        
         rids = table.index.locate(search_key_index, search_key)
         records = []
+        columns = []
+        for col in projected_columns_index:
+            
         for rid in rids:
             # Need to get a record from rid
             # Unsure how to continue...
