@@ -1,4 +1,5 @@
 from lstore.index import Index
+from lstore.index import Page #added Page because pdf says Table uses Page internally
 from time import time
 
 INDIRECTION_COLUMN = 0
