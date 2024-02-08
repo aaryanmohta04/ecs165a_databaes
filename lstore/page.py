@@ -47,9 +47,9 @@ class BasePage:
     #need 4k pages/columns per BP
     #need to create an array of pages?
     #creating 4k columnar pages for each BP
-    def __init__(self):
+    def __init__(self, numCols):
         self.num_records_BP = 0
-        for i in range(4000):
+        for i in range(numCols):
             ColumnPageArray[i] = Page()
 
     def has_capacity(self):
@@ -59,15 +59,18 @@ class BasePage:
             return false
 
 #Should have 16 BPs each BP with 4k Pages and each BP can have 4k records (1 record is a value from each page in BP)
+#numCols gets sent to BasePage where it will determine number of Pages per Base Page
 class PageRange:
-    def __init__(self):
+    def __init__(self, numCols):
         # 16 base pages / page range
-        self.num_base_pages = 0
+        self.num_base_pages = MAX_PAGES_PER_RANGE
         self.num_tail_pages = 0
         #maybe the RID of the first record is the page range id? if we even need one
         self.id = 0
-        self.base_pages = [None] * 16
-        self.tail_pages = [None]
+        #self.base_pages = [None] * 16
+        #self.tail_pages = [None]
+        for j in range(16):
+            PageRangeArray[j] = BasePage(numCols)
         
     def create_page_range(self, cur_table_records):
         self.id = cur_table_records + 1
@@ -77,7 +80,3 @@ class PageRange:
             return true
         else:
             return false
-
-    def add_page(self, page):
-        self.num_base_page += 1
-        pass
