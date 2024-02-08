@@ -80,3 +80,6 @@ class PageRange:
             return true
         else:
             return false
+            
+    def add_tail_page(self):
+        pass
