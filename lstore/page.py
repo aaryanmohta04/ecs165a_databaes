@@ -27,7 +27,8 @@ class Page:
 
     def __init__(self):
         self.num_records = 0
-        self.data = bytearray(4096)
+        #self.data = bytearray(4096)
+        self.data = [None] * 4000 #temp method of creating page
 
     def has_capacity(self):
         if self.num_records < MAX_RECORDS_PER_PAGE:
@@ -36,8 +37,9 @@ class Page:
             return false
 
     def write(self, value):
+        self.data[num_records] = value
         self.num_records += 1
-        self.data.append(value)
+        #self.data.append(value)
 
 #One Base_Page Contains many pages/columns (16 BPs in Page Range)
 #Technically Tail Pages also create 4k columnar pages (could this class be used for both?)
