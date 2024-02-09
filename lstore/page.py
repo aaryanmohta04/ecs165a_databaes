@@ -58,7 +58,6 @@ class BasePage:
         else:
             return false
 
-'''
 #Should have 16 BPs each BP with 4k Pages and each BP can have 4k records (1 record is a value from each page in BP)
 #numCols gets sent to BasePage where it will determine number of Pages per Base Page
 class PageRange:
@@ -84,4 +83,3 @@ class PageRange:
             
     def add_tail_page(self):
         pass
-'''
