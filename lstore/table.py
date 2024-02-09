@@ -29,6 +29,8 @@ class Table:
         self.page_directory = {}
         self.index = Index(self)
         self.num_records = 0
+
+        page_range = PageRange(num_columns) 
         pass
     
     # If page_directory holds IDs of page ranges...
@@ -37,9 +39,11 @@ class Table:
     # Would need to make sure tail page ID can't be the same as any 
     # already assigned or future IDs
     # EX)  Page Range1: 0-64000 but holds id = 0, Page Range 2 holds ID 64001
-    
-    def add_page_range(self):
-        page_range = create_page_range()
+
+    #added numCols to arguments because creating a PageRange requires numCols argument
+    def add_page_range(self, numCols):
+        page_range = PageRange(numCols) 
+        #page_range.id = #can make it equal to the value of the last index in page_directory + 1
         self.page_directory.append(page_range.id)
         num_records += MAX_RECORDS_PER_PAGE_RANGE
         
