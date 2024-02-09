@@ -21,6 +21,7 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
+        rid = 
         pass
     
     
@@ -30,7 +31,15 @@ class Query:
     # Returns False if insert fails for whatever reason
     """
     def insert(self, *columns):
+        # Confused at what this does:
         schema_encoding = '0' * self.table.num_columns
+        
+        
+        key = columns[self.table.key_column]
+        rid = self.table.num_records
+        record = Record(rid,key,columns)
+        return True
+        
         pass
 
     

@@ -50,6 +50,13 @@ class BasePage:
     #need to create an array of pages?
     #creating 4k columnar pages for each BP
     def __init__(self, numCols):
+        self.RID = []
+        self.start_time = []
+        self.schema_encoding = []
+        self.indirection = []
+        self.pages = []
+        
+        # May be unnecessary
         self.num_records_BP = 0
         for i in range(numCols):
             ColumnPageArray[i] = Page()
