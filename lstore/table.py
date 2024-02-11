@@ -28,9 +28,17 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns
-        self.page_directory = np.array([])
+        self.page_directory = []
         self.index = Index(self)
         self.num_records = 0
+
+        #array for the page ranges
+        self.pageRange = []
+        
+        #want to keep track of current page range, current BP, current record
+        self.curPageRange = 0
+        self.curBP = 0
+        self.curRecord = 0
 
         add_page_range(self, num_columns)
         pass
@@ -45,10 +53,13 @@ class Table:
     #added numCols to arguments because creating a PageRange requires numCols argument
     def add_page_range(self, numCols):
         page_range = PageRange(numCols) 
+
+        self.pageRange.append(page_range) #adding new page range to page range array
+        self.curPageRange = len(self.pageRange) - 1
         #page_range.id = #can make it equal to the value of the last index in page_directory + 1
-        page_range.id = len(self.page_directory) * 64000 #1. 0 2. 64000 3. 128000 etc
-        self.page_directory = np.append(self.page_directory([page_range.id]))
-        num_records += MAX_RECORDS_PER_PAGE_RANGE
+        #page_range.id = len(self.page_directory) * 64000 #1. 0 2. 64000 3. 128000 etc
+        #self.page_directory.append(page_range.id)
+        self.num_records += MAX_RECORDS_PER_PAGE_RANGE
         
     def get_page_range(self, rid):
         # Maybe a tree or hash table for the page_directory?
