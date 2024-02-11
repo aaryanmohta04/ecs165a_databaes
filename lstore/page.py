@@ -75,7 +75,7 @@ class PageRange:
 
     # 16 base pages / page range
     def has_capacity(self):
-        if self.num_base_pages < MAX_PAGES_PER_RANGE:
+        if self.num_base_pages < MAX_BASEPAGES_PER_RANGE:
             return true
         else:
             return false
