@@ -57,6 +57,9 @@ class BasePage:
             return true
         else:
             return false
+            
+    def insertRecBP(self, *columns):
+        pass
         
 class TailPage:
     def __init__(self):
