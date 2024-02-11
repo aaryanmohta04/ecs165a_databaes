@@ -92,4 +92,5 @@ class PageRange:
     def add_base_page(self, numCols):
         if self.has_capacity():
             self.base_pages.append(BasePage(numCols))
+            self.num_base_pages += 1
         pass
