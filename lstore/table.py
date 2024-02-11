@@ -40,7 +40,7 @@ class Table:
         self.curBP = 0
         self.curRecord = 0
 
-        add_page_range(self, num_columns)
+        add_page_range(num_columns)
         pass
     
     # If page_directory holds IDs of page ranges...  
