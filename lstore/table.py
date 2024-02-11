@@ -81,7 +81,16 @@ class Table:
         page = get_page(page_range_id, rid)
         record = get_record(page, rid)
         pass
-        
+
+    def updateCurBP(self):
+        self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
+        if self.curBP == -1:
+            self.curBP = 0 #in case that numbasepages is 0 and becomes -1
+    
+    def insertRec(self, *columns): #do i need the pointer?
+        if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
+            if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
+                self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns)
 
     def __merge(self):
         print("merge is happening")
