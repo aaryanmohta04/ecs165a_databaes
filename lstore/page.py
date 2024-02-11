@@ -40,13 +40,17 @@ class BasePage:
     #need 4k pages/columns per BP
     #need to create an array of pages?
     #creating 4k columnar pages for each BP
-    def __init__(self):
-        self.rid = []
+    def __init__(self, numCols):
+        self.rid = [] 
         self.start_time = []
         self.schema_encoding = []
         self.indirection = []
         self.pages = []
         self.num_records = 0
+
+        #create array of pages/cols (4 allocated for schema, indirection, rid, start time)
+        for i in numCols:
+            self.pages.append(Page())
 
     def has_capacity(self):
         if self.num_records < MAX_RECORDS_PER_PAGE:
@@ -64,11 +68,11 @@ class TailPage:
 #numCols gets sent to BasePage where it will determine number of Pages per Base Page
 class PageRange:
     #Empty initialization
-    def __init__(self):
+    def __init__(self, numCols):
         self.num_base_pages = 0
         self.num_tail_pages = 0
-        self.base_pages = [None] * 16
-        self.tail_pages = [None]
+        self.base_pages = []
+        self.tail_pages = []
     
     def create_page_range(self, cur_table_records):
         self.id = cur_table_records + 1
@@ -84,4 +88,6 @@ class PageRange:
         pass
     
     def add_base_page(self):
+        if self.has_capacity():
+            self.base_pages.append(BasePage(numCols))
         pass
