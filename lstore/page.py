@@ -76,10 +76,20 @@ class BasePage:
         self.num_records += 1
         
 class TailPage:
-    def __init__(self):
+    def __init__(self, numCols):
         self.rid = []
         self.indirection = []
         self.pages = []
+        self.num_records = 0
+
+        for i in numCols:
+            self.pages.append(Page())
+
+    def has_capacity(self):
+        if self.num_records < MAX_RECORDS_PER_PAGE:
+            return true
+        else:
+            return false
 
 #Should have 16 BPs each BP with 4k Pages and each BP can have 4k records (1 record is a value from each page in BP)
 #numCols gets sent to BasePage where it will determine number of Pages per Base Page
@@ -104,10 +114,11 @@ class PageRange:
             return false
             
     def add_tail_page(self):
-        pass
+        self.tailPages.append(TailPage(numCols))
+        self.num_tail_pages += 1
     
     def add_base_page(self, numCols):
         if self.has_capacity():
             self.basePages.append(BasePage(numCols))
             self.num_base_pages += 1
-        pass
+      
