@@ -42,6 +42,14 @@ class Query:
         
         pass
 
+    # For select, gives only desired columns
+    def modify_columns(record, projected_columns_index):
+        new_record = []
+        for i in range(len(record.columns)):
+            if projected_columns_index[i] == 1:
+                new_record.append[record.columns[i]]
+        
+        return new_record
     
     """
     # Read matching record with specified search key
@@ -58,17 +66,14 @@ class Query:
         
         rids = table.index.locate(search_key_index, search_key)
         records = []
-        columns = []
-        for col in projected_columns_index:
             
         for rid in rids:
-            # Need to get a record from rid
-            # Unsure how to continue...
-            # 
-            record = Record(rid, search_key, columns)
+            record = find_record(rid)
+            record = modify_columns(record, projected_columns_index)
             records.append(record)
         return records
         pass
+    
 
     
     """

@@ -69,6 +69,9 @@ class Table:
         if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
             if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
                 self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns)
+                
+    def find_record(self, rid):
+        pass
 
     def __merge(self):
         print("merge is happening")
