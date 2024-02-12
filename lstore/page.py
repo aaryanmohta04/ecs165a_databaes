@@ -59,7 +59,8 @@ class BasePage:
             return false
             
     def insertRecBP(self, *columns):
-        pass
+        for i in numCols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
+            self.pages[i].write(columns[i])
         
 class TailPage:
     def __init__(self):
