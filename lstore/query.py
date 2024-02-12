@@ -98,6 +98,10 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
+        #need the RID somehow (index?)
+        #use the key or RID to get the right record in Table.py
+        #in Table.py, can check if tail record is full or needs to be made
+        #can then call insertRecTP
         pass
 
     
