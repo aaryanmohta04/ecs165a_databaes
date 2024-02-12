@@ -76,8 +76,8 @@ class PageRange:
     def __init__(self, numCols):
         self.num_base_pages = 0
         self.num_tail_pages = 0
-        self.base_pages = []
-        self.tail_pages = []
+        self.basePages = []
+        self.tailPages = []
 
         self.base_pages.append(add_base_page(numCols)) #every time page range created populate with one base page
     
