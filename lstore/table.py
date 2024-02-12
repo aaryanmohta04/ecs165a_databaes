@@ -64,23 +64,35 @@ class Table:
         self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
         if self.curBP == -1:
             self.curBP = 0 #in case that numbasepages is 0 and becomes -1
-    
+
+    def updateCurRecord(self):
+        self.curRecord = self.pageRange[self.curPageRange].basePages[self.curBP].num_records - 1
+
+    def createBP_RID(self):
+        tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b')
+        self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
    
     def find_record(self, rid):
         pass
     
     def insertRec(self, *columns): 
         if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
-             self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
+            self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
+            self.updateCurRecord() #update record index for current BP
+            self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
         else: #if it is
              if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
                  self.updateCurBP() #updates current BP to new BP
                  self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
+                 self.updateCurRecord() #update record index for current BP
+                 self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
              else: #if is
                  self.add_page_range(self.num_columns) #add a new page range
                  self.updateCurBP() #adding a new page range should have set the current page range to the new one and added a new base page to it
                  self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
+                 self.updateCurRecord() #update record index for current BP
+                 self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
 
     def __merge(self):
         print("merge is happening")
