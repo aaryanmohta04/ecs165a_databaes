@@ -75,12 +75,13 @@ class Table:
     def find_record(self, rid):
         pass
     
-    def insertRec(self, *columns): 
+    def insertRec(self, *columns, schema_encoding): 
         if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
             self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
             self.num_records += 1 #update table's numRecords
             self.updateCurRecord() #update record index for current BP
             self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
+            self.pageRange[self.curPageRange].basePages[self.curBP].schema_encoding[self.curRecord] = schema_encoding #add '0000...' for schema_encoding
         else: #if it is
              if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
@@ -89,6 +90,7 @@ class Table:
                  self.num_records += 1 #update table's numRecords
                  self.updateCurRecord() #update record index for current BP
                  self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
+                 self.pageRange[self.curPageRange].basePages[self.curBP].schema_encoding[self.curRecord] = schema_encoding #add '0000...' for schema_encoding
              else: #if is
                  self.add_page_range(self.num_columns) #add a new page range
                  self.updateCurBP() #adding a new page range should have set the current page range to the new one and added a new base page to it
@@ -96,6 +98,7 @@ class Table:
                  self.num_records += 1 #update table's numRecords
                  self.updateCurRecord() #update record index for current BP
                  self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
+                 self.pageRange[self.curPageRange].basePages[self.curBP].schema_encoding[self.curRecord] = schema_encoding #add '0000...' for schema_encoding
 
     def __merge(self):
         print("merge is happening")
