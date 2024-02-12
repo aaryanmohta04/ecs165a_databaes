@@ -23,9 +23,9 @@ class Page:
 
     def has_capacity(self):
         if self.num_records < MAX_RECORDS_PER_PAGE:
-            return true
+            return True
         else:
-            return false
+            return False
 
     def write(self, value):
         # 8 bytes per record
@@ -66,9 +66,9 @@ class BasePage:
 
     def has_capacity(self):
         if self.num_records < MAX_RECORDS_PER_PAGE:
-            return true
+            return True
         else:
-            return false
+            return False
             
     def insertRecBP(self, *columns, RID, start_time, schema_encoding, indirection):
         for i in numCols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
@@ -92,9 +92,9 @@ class TailPage:
 
     def has_capacity(self):
         if self.num_records < MAX_RECORDS_PER_PAGE:
-            return true
+            return True
         else:
-            return false
+            return False
 
     def insertRecTP(self, *columns):
         schema = '' #added schema encoding here because it's where I iterate through the data anyway
@@ -124,9 +124,9 @@ class PageRange:
     # 16 base pages / page range
     def has_capacity(self):
         if self.num_base_pages < MAX_BASEPAGES_PER_RANGE:
-            return true
+            return True
         else:
-            return false
+            return False
             
     def add_tail_page(self):
         self.tailPages.append(TailPage(numCols))
