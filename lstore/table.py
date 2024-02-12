@@ -78,6 +78,7 @@ class Table:
     def insertRec(self, *columns): 
         if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
             self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
+            self.num_records += 1 #update table's numRecords
             self.updateCurRecord() #update record index for current BP
             self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
         else: #if it is
@@ -85,12 +86,14 @@ class Table:
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
                  self.updateCurBP() #updates current BP to new BP
                  self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
+                 self.num_records += 1 #update table's numRecords
                  self.updateCurRecord() #update record index for current BP
                  self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
              else: #if is
                  self.add_page_range(self.num_columns) #add a new page range
                  self.updateCurBP() #adding a new page range should have set the current page range to the new one and added a new base page to it
                  self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
+                 self.num_records += 1 #update table's numRecords
                  self.updateCurRecord() #update record index for current BP
                  self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
 
