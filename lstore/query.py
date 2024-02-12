@@ -102,6 +102,9 @@ class Query:
         #use the key or RID to get the right record in Table.py
         #in Table.py, can check if tail record is full or needs to be made
         #can then call insertRecTP
+
+        #will have to update tailPage (schema, indirection, records)
+        #will have to update base page record (schema, indirection)
         pass
 
     
