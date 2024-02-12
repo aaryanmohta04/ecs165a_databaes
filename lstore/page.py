@@ -80,6 +80,7 @@ class TailPage:
         self.rid = []
         self.indirection = []
         self.pages = []
+        self.schema_encoding = []
         self.num_records = 0
 
         for i in numCols:
@@ -90,6 +91,16 @@ class TailPage:
             return true
         else:
             return false
+
+    def insertRecTP(self, *columns):
+        schema = '' #added schema encoding here because it's where I iterate through the data anyway
+        for j in numCols:
+            if columns[j] != None:
+                self.pages[j].write(columns[j])
+                schema = schema + '1'
+            else:
+                schema = schema + '0'
+        self.num_records += 1
 
 #Should have 16 BPs each BP with 4k Pages and each BP can have 4k records (1 record is a value from each page in BP)
 #numCols gets sent to BasePage where it will determine number of Pages per Base Page
