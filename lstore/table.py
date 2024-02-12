@@ -65,7 +65,7 @@ class Table:
         if self.curBP == -1:
             self.curBP = 0 #in case that numbasepages is 0 and becomes -1
     
-    def insertRec(self, *columns): #do i need the pointer?
+    def insertRec(self, *columns): 
         if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
              self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
         else: #if it is
