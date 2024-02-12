@@ -49,7 +49,7 @@ class Table:
         page_range = PageRange(numCols) 
 
         self.pageRange.append(page_range) #adding new page range to page range array
-        self.curPageRange = len(self.pageRange) - 1
+        self.curPageRange = len(self.pageRange) - 1 #update current page range
         self.num_records += MAX_RECORDS_PER_PAGE_RANGE
         
     def get_page_range(self):
@@ -65,13 +65,22 @@ class Table:
         if self.curBP == -1:
             self.curBP = 0 #in case that numbasepages is 0 and becomes -1
     
-    def insertRec(self, *columns): #do i need the pointer?
-        if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
-            if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
-                self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns)
-                
+   
     def find_record(self, rid):
         pass
+    
+    def insertRec(self, *columns): 
+        if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
+             self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
+        else: #if it is
+             if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
+                 self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
+                 self.updateCurBP() #updates current BP to new BP
+                 self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
+             else: #if is
+                 self.add_page_range(self.num_columns) #add a new page range
+                 self.updateCurBP() #adding a new page range should have set the current page range to the new one and added a new base page to it
+                 self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
 
     def __merge(self):
         print("merge is happening")
