@@ -31,15 +31,14 @@ class Query:
     # Returns False if insert fails for whatever reason
     """
     def insert(self, *columns):
-        # Confused at what this does:
         schema_encoding = '0' * self.table.num_columns
+        indirection = 
 
         key = columns[self.table.key_column]
 
         self.table.insertRec(*columns, schema_encoding) #call function in Table.py to insert record
         
-        #Base page is updated or a new one is made
-        #Should be no tail pages added as this is not an update
+
         return True
         
         pass

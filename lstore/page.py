@@ -31,6 +31,18 @@ class Page:
         # 8 bytes per record
         self.data[num_records * 8] = value
         self.num_records += 1
+        
+    def find_value(self,value):
+        indexes = []
+        for i in range(MAX_RECORDS_PER_PAGE):
+            cur_val = int.from_bytes(self.data[i*8:(i+1)*8],'big')
+            if cur_val == value:
+                indexes.append(i)
+        return indexes
+        
+    def get_value(self, index):
+        val = int.from_bytes(self.data[index*8:(index + 1)*8], 'big')
+        return val
 
 #One Base_Page Contains many pages/columns (16 BPs in Page Range)
 #Technically Tail Pages also create 4k columnar pages (could this class be used for both?)
