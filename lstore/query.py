@@ -31,12 +31,9 @@ class Query:
     # Returns False if insert fails for whatever reason
     """
     def insert(self, *columns):
-        schema_encoding = '0' * self.table.num_columns
-        indirection = 
-
-        key = columns[self.table.key_column]
-
-        self.table.insertRec(*columns, schema_encoding) #call function in Table.py to insert record
+        start_time = datetime.now().strftime("%Y%m%d%H%M%S")
+        schema_encoding = '0' * self.table.num_columns  #add '0000...' for schema_encoding
+        self.table.insertRec(*columns, start_time, schema_encoding) #call function in Table.py to insert record
         
 
         return True

@@ -70,10 +70,14 @@ class BasePage:
         else:
             return false
             
-    def insertRecBP(self, *columns):
+    def insertRecBP(self, *columns, RID, start_time, schema_encoding, indirection):
         for i in numCols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.pages[i].write(columns[i])
         self.num_records += 1
+        self.rid.append(RID)
+        self.start_time.append(start_time)
+        self.schema_encoding.append(schema_encoding)
+        self.indirection.append(indirection)
         
 class TailPage:
     def __init__(self, numCols):

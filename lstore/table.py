@@ -64,6 +64,10 @@ class Table:
         self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
         if self.curBP == -1:
             self.curBP = 0 #in case that numbasepages is 0 and becomes -1
+    
+    #Does this need to be a pointer???        
+    def getCurBP(self):
+        return self.pageRange[self.curPageRange].basePages[self.curBP]
 
     def updateCurRecord(self):
         self.curRecord = self.pageRange[self.curPageRange].basePages[self.curBP].num_records - 1
@@ -76,34 +80,22 @@ class Table:
     def find_record(self, rid):
         pass
     
-    def insertRec(self, *columns, schema_encoding): 
-        if self.pageRange[self.curPageRange].basePages[self.curBP].hasCapacity: #checks if current BP is full
-            self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #if not, insert
-            self.num_records += 1 #update table's numRecords
-            self.updateCurRecord() #update record index for current BP
-            tupleRID = self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
-            self.pageRange[self.curPageRange].basePages[self.curBP].schema_encoding[self.curRecord] = schema_encoding #add '0000...' for schema_encoding
-            self.pageRange[self.curPageRange].basePages[self.curBP].indirection[self.curRecord] = tupleRID #add RID to indirection column since this is insert, not update
-        else: #if it is
-             if self.pageRange[self.curPageRange].hasCapacity: #checks if current page range is full
+    def insertRec(self, *columns, start_time, schema_encoding):
+        if self.getCurBP().hasCapacity == False:                #checks if current BP is full
+            if self.pageRange[self.curPageRange].hasCapacity:   #checks if current page range is full
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
-                 self.updateCurBP() #updates current BP to new BP
-                 self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
-                 self.num_records += 1 #update table's numRecords
-                 self.updateCurRecord() #update record index for current BP
-                 tupleRID = self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
-                 self.pageRange[self.curPageRange].basePages[self.curBP].schema_encoding[self.curRecord] = schema_encoding #add '0000...' for schema_encoding
-                 self.pageRange[self.curPageRange].basePages[self.curBP].indirection[self.curRecord] = tupleRID #add RID to indirection column since this is insert, not update
-             else: #if is
-                 self.add_page_range(self.num_columns) #add a new page range
-                 self.updateCurBP() #adding a new page range should have set the current page range to the new one and added a new base page to it
-                 self.pageRange[self.curPageRange].basePages[self.curBP].insertRecBP(*columns) #now insert
-                 self.num_records += 1 #update table's numRecords
-                 self.updateCurRecord() #update record index for current BP
-                 tupleRID = self.createBP_RID() #create RID for inserted record (inserts can only be for BP)
-                 self.pageRange[self.curPageRange].basePages[self.curBP].schema_encoding[self.curRecord] = schema_encoding #add '0000...' for schema_encoding
-                 self.pageRange[self.curPageRange].basePages[self.curBP].indirection[self.curRecord] = tupleRID #add RID to indirection column since this is insert, not update
-
+                 self.updateCurBP()                             #updates current BP to new BP
+            else: #if is
+                 self.add_page_range(self.num_columns)          #add a new page range
+                 self.updateCurBP()                             #adding a new page range should have set the current page range 
+                                                                # to the new one and added a new base page to it
+                                                                      
+        RID  = self.table.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
+        indirection = RID                                       #add RID to indirection column since this is insert, not update
+        self.getCurBP().insertRecBP(*columns, RID, start_time, schema_encoding, indirection) #now insert         
+        self.num_records += 1                                   #update table's numRecords
+        self.updateCurRecord()                                  #update record index for current BP
+    
     def __merge(self):
         print("merge is happening")
         pass
