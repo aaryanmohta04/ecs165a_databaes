@@ -62,12 +62,11 @@ class Query:
         if self.table.index.has_index(search_key_index) == False:
             self.table.index.create_index(search_key_index)
         
-        rids = table.index.locate(search_key_index, search_key)
+        rids = self.table.index.locate(search_key_index, search_key)
         records = []
             
         for rid in rids:
-            record = find_record(rid)
-            record = modify_columns(record, projected_columns_index)
+            record = self.table.find_record(rid, projected_columns_index)
             records.append(record)
         return records
         pass
@@ -127,6 +126,7 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
+
         pass
 
     

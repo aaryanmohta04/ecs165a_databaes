@@ -1,7 +1,7 @@
 from lstore.index import Index
 from lstore.index import Page #added Page because pdf says Table uses Page internally
 from time import time
-
+from lstore.page import PageRange
 import numpy as np
 
 INDIRECTION_COLUMN = 0
@@ -40,7 +40,7 @@ class Table:
         self.curBP = 0
         self.curRecord = 0
 
-        add_page_range(num_columns)
+        self.add_page_range(num_columns)
         pass
     
 
@@ -56,7 +56,7 @@ class Table:
         if self.pageRange[self.curPageRange].has_capacity():
             return self.pageRange[self.curPageRange]
         else:
-            add_page_range(self.num_columns)
+            self.add_page_range(self.num_columns)
             return self.pageRange[self.curPageRange]
             
 
@@ -77,7 +77,19 @@ class Table:
         self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
    
-    def find_record(self, rid):
+    def find_record(self, rid, projected_columns_index):
+        #Assuming we have rid of the base page record
+        rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]; # updating rid to the latest version of the record. 
+        record = []
+        if(rid[3] == 'b'):
+            for i in range(self.num_columns):
+                if (projected_columns_index[i]):
+                    record.append(self.PageRange[rid[0]].basePages[rid[1]].pages[i][rid[2] * 8])
+        else:
+           for i in range(self.num_columns):
+                if (projected_columns_index[i]):
+                    record.append(self.PageRange[rid[0]].tailPages[rid[1]].pages[i][rid[2] * 8]) 
+        return record 
         pass
     
     def insertRec(self, *columns, start_time, schema_encoding):

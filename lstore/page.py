@@ -116,7 +116,7 @@ class PageRange:
         self.basePages = []
         self.tailPages = []
 
-        self.basePages.append(add_base_page(numCols)) #every time page range created populate with one base page
+        self.basePages.append(self.add_base_page(numCols)) #every time page range created populate with one base page
     
     def create_page_range(self, cur_table_records):
         self.id = cur_table_records + 1
