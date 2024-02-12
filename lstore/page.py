@@ -61,6 +61,7 @@ class BasePage:
     def insertRecBP(self, *columns):
         for i in numCols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.pages[i].write(columns[i])
+        self.num_records += 1
         
 class TailPage:
     def __init__(self):
