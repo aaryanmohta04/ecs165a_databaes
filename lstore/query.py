@@ -33,11 +33,11 @@ class Query:
     def insert(self, *columns):
         # Confused at what this does:
         schema_encoding = '0' * self.table.num_columns
-        
-        
+
         key = columns[self.table.key_column]
-        rid = self.table.num_records
-        record = Record(rid,key,columns)
+        
+        #Base page is updated or a new one is made
+        #Should be no tail pages added as this is not an update
         return True
         
         pass
@@ -82,6 +82,7 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
+        
         pass
 
     

@@ -43,12 +43,6 @@ class Table:
         add_page_range(num_columns)
         pass
     
-    # If page_directory holds IDs of page ranges...  
-    # Possible implementation of page_directory -> RID
-    # Not sure how to assign an ID to tail pages or if that is even needed
-    # Would need to make sure tail page ID can't be the same as any 
-    # already assigned or future IDs
-    # EX)  Page Range1: 0-64000 but holds id = 0, Page Range 2 holds ID 64001
 
     #added numCols to arguments because creating a PageRange requires numCols argument
     def add_page_range(self, numCols):
@@ -56,31 +50,15 @@ class Table:
 
         self.pageRange.append(page_range) #adding new page range to page range array
         self.curPageRange = len(self.pageRange) - 1
-        #page_range.id = #can make it equal to the value of the last index in page_directory + 1
-        #page_range.id = len(self.page_directory) * 64000 #1. 0 2. 64000 3. 128000 etc
-        #self.page_directory.append(page_range.id)
         self.num_records += MAX_RECORDS_PER_PAGE_RANGE
         
-    def get_page_range(self, rid):
-        # Maybe a tree or hash table for the page_directory?
-        #could implement a faster search alrgorithm than just going through page_directory one by one
-        for i in len(self.page_directory) - 1:
-            if rid > self.page_directory[i] and rid < self.page_directory[i + 1]:
-                correct_page_range_id = self.page_directory[i] #can get the id of the page_range containing the rid but how do i acually return the right page range (where are page_ranges stored and how do i access ones already made?)
-        return correct_page_range_id
-
-    def get_page(self, page_range_id, rid):
-        #idk how to access pages or records from here
-        pass
-        
-    
-    def find_record(self, rid):
-        # This seems inefficient so maybe there is a better way
-        # If this works, need to add these 3 methods:
-        page_range_id = get_page_range(rid)
-        page = get_page(page_range_id, rid)
-        record = get_record(page, rid)
-        pass
+    def get_page_range(self):
+        if self.pageRange[self.curPageRange].has_capacity():
+            return self.pageRange[self.curPageRange]
+        else:
+            add_page_range(self.num_columns)
+            return self.pageRange[self.curPageRange]
+            
 
     def updateCurBP(self):
         self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
