@@ -35,6 +35,8 @@ class Query:
         schema_encoding = '0' * self.table.num_columns
 
         key = columns[self.table.key_column]
+
+        insertRec(*columns) #call function in Table.py to insert record
         
         #Base page is updated or a new one is made
         #Should be no tail pages added as this is not an update
