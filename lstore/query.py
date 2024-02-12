@@ -66,6 +66,7 @@ class Query:
         records = []
             
         for rid in rids:
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
             record = self.table.find_record(rid, projected_columns_index)
             records.append(record)
         return records
@@ -84,7 +85,17 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
-        
+        rids = self.table.index.locate(search_key_index, search_key)
+        for rid in rids: 
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]] # converts base page rid to tail rid if any, else remains same
+            while relative_version != 0: 
+                rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
+                relative_version += 1
+            records = []
+            
+        for rid in rids:
+            record = self.table.find_record(rid, projected_columns_index)
+            records.append(record)
         pass
 
     

@@ -79,15 +79,15 @@ class Table:
    
     def find_record(self, rid, projected_columns_index):
         #Assuming we have rid of the base page record
-        rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]; # updating rid to the latest version of the record. 
+         # updating rid to the latest version of the record. 
         record = []
         if(rid[3] == 'b'):
-            for i in range(self.num_columns):
-                if (projected_columns_index[i]):
+            for i in projected_columns_index:
+                if (i == 1):
                     record.append(self.PageRange[rid[0]].basePages[rid[1]].pages[i][rid[2] * 8])
         else:
-           for i in range(self.num_columns):
-                if (projected_columns_index[i]):
+           for i in projected_columns_index:
+                if (i == 1):
                     record.append(self.PageRange[rid[0]].tailPages[rid[1]].pages[i][rid[2] * 8]) 
         return record 
         pass
