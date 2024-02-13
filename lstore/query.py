@@ -66,7 +66,7 @@ class Query:
         records = []
             
         for rid in rids:
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
             record = self.table.find_record(rid, projected_columns_index)
             records.append(record)
         return records
@@ -87,9 +87,9 @@ class Query:
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         rids = self.table.index.locate(search_key_index, search_key)
         for rid in rids: 
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]] # converts base page rid to tail rid if any, else remains same
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
             while relative_version != 0: 
-                rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
+                rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
                 relative_version += 1
             records = []
             
@@ -106,7 +106,9 @@ class Query:
     """
     def update(self, primary_key, *columns):
         rid = self.table.index.locate(self.table.key, primary_key)
-        rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
+        pageRange = self.table.pageRange[rid[0]]
+        currentRid = pageRange.basePages[rid[1]].indirection[rid[2]]
+        pageRange.add_tail_page()
         #need the RID somehow (index?)
         #use the key or RID to get the right record in Table.py
         #in Table.py, can check if tail record is full or needs to be made
@@ -128,7 +130,7 @@ class Query:
     def sum(self, start_range, end_range, aggregate_column_index):
         rids = table.index.locate_range(start_range,end_range, aggregate_column_index)
         for rid in rids:
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
         pass
 
     
