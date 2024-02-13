@@ -70,7 +70,7 @@ class Table:
         return self.pageRange[self.curPageRange].basePages[self.curBP]
 
     def updateCurRecord(self):
-        self.curRecord = self.pageRange[self.curPageRange].basePages[self.curBP].num_records - 1
+        self.curRecord = self.pageRange[self.curPageRange].basePages[self.curBP].num_records 
 
     def createBP_RID(self):
         tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b')
