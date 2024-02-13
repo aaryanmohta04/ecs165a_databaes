@@ -58,6 +58,6 @@ class Index:
     def add_node(self, key, rid):
         if self.indices[0] == None:                      # If column has no index
             self.create_index(0)
-        self.indices[0].insert(key:rid)
+        self.indices[0][key].append(rid)
                       
             

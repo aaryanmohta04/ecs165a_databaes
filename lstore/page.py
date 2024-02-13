@@ -62,7 +62,7 @@ class BasePage:
         self.num_cols = numCols
 
         #create array of pages/cols (4 allocated for schema, indirection, rid, start time)
-        for i in numCols:
+        for i in range(numCols):
             self.pages.append(Page())
 
     def has_capacity(self):
