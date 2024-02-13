@@ -105,6 +105,8 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
+        rid = self.table.index.locate(self.table.key, primary_key)
+        rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
         #need the RID somehow (index?)
         #use the key or RID to get the right record in Table.py
         #in Table.py, can check if tail record is full or needs to be made
@@ -124,6 +126,9 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum(self, start_range, end_range, aggregate_column_index):
+        rids = table.index.locate_range(start_range,end_range, aggregate_column_index)
+        for rid in rids:
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[3]]
         pass
 
     
