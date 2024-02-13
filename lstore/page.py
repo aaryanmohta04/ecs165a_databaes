@@ -29,13 +29,13 @@ class Page:
 
     def write(self, value):
         # 8 bytes per record
-        self.data[self.num_records * 8] = value
+        self.data[self.num_records * 8:(self.num_records + 1) * 8] = int(value).to_bytes(8, byteorder='big')
         self.num_records += 1
         
     def find_value(self,value):
         indexes = []
         for i in range(MAX_RECORDS_PER_PAGE):
-            cur_val = int.from_bytes(self.data[i*8:(i+1)*8],'big')
+            cur_val = int.from_bytes(self.data[i*8:(i+1)*8], byteorder = 'big')
             if cur_val == value:
                 indexes.append(i)
         return indexes
@@ -53,7 +53,7 @@ class BasePage:
     #need to create an array of pages?
     #creating 4k columnar pages for each BP
     def __init__(self, numCols):
-        self.rid = [] 
+        self.rid = [None] * 512
         self.start_time = []
         self.schema_encoding = []
         self.indirection = []
@@ -72,7 +72,7 @@ class BasePage:
             return False
             
     def insertRecBP(self, RID, start_time, schema_encoding, indirection, *columns):
-        for i in self.num_cols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
+        for i in range(self.num_cols): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.pages[i].write(columns[i])
         self.num_records += 1
         self.rid.append(RID)

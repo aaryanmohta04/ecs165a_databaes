@@ -105,10 +105,9 @@ class Table:
                                                                       
         RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
         indirection = RID                                       #add RID to indirection column since this is insert, not update
-        self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert         
-        self.num_records += 1                                   #update table's numRecords
+        self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecords
         self.updateCurRecord()                                  #update record index for current BP
-        key = get_key(RID)
+        key = self.get_key(RID)
         add_node(key,RID)
     
     def __merge(self):
