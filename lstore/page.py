@@ -139,4 +139,5 @@ class PageRange:
         if self.has_capacity():
             self.basePages.append(BasePage(numCols))
             self.num_base_pages += 1
+            print("base page has been added")
       

@@ -71,7 +71,9 @@ class Table:
         self.curRecord = self.pageRange[self.curPageRange].basePages[self.curBP].num_records 
 
     def createBP_RID(self):
-        tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b')
+       
+        tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b') 
+        print(str(tupleRID))
         self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
    
@@ -95,10 +97,12 @@ class Table:
         return self.pageRange[RID[0]].basePages[RID[1]].pages[0].data[8*RID[2]]
     
     def insertRec(self, start_time, schema_encoding, *columns):
-        if self.getCurBP().has_capacity == False:                #checks if current BP is full
-            if self.pageRange[self.curPageRange].hasCapacity:   #checks if current page range is full
+        if self.getCurBP().has_capacity() == False:                #checks if current BP is full
+            if self.pageRange[self.curPageRange].has_capacity():  #checks if current page range is full
+                 print("adding base page")
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
-                 self.updateCurBP()                             #updates current BP to new BP
+                 self.updateCurBP()
+                 self.updateCurRecord()                             #updates current BP to new BP
             else: #if is
                  self.add_page_range(self.num_columns)          #add a new page range
                  self.updateCurBP()                             #adding a new page range should have set the current page range 
@@ -108,7 +112,7 @@ class Table:
         indirection = RID                                       #add RID to indirection column since this is insert, not update
         self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecords
         self.updateCurRecord()                                  #update record index for current BP
-        key = self.get_key(RID)
+        key = columns[0]
         self.index.add_node(key,RID)
     
     def __merge(self):
