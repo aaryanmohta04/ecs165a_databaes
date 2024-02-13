@@ -108,7 +108,11 @@ class Query:
         rid = self.table.index.locate(self.table.key, primary_key)
         pageRange = self.table.pageRange[rid[0]]
         currentRid = pageRange.basePages[rid[1]].indirection[rid[2]]
-        pageRange.add_tail_page()
+        if pageRange.tailPages[pageRange.num_tail_pages()-1].has_capacity() == False:
+            pageRange.add_tail_page()
+        tailPage = pageRange.tailPages[pageRange.num_tail_pages()-1]
+        
+        
         #need the RID somehow (index?)
         #use the key or RID to get the right record in Table.py
         #in Table.py, can check if tail record is full or needs to be made
