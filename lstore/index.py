@@ -53,3 +53,11 @@ class Index:
     def drop_index(self, column_number):
         self.indices[column_number] = None
         pass
+
+
+    def add_node(self, key, rid):
+        if self.indices[0] == None:                      # If column has no index
+            self.create_index(0)
+        self.indices[0].insert(key:rid)
+                      
+            

@@ -92,6 +92,9 @@ class Table:
         return record 
         pass
     
+    def get_key(self, RID):
+        return self.pageRange[RID[0]].basePages[RID[1]].pages[0] + 8*RID[3]
+    
     def insertRec(self, *columns, start_time, schema_encoding):
         if self.getCurBP().hasCapacity == False:                #checks if current BP is full
             if self.pageRange[self.curPageRange].hasCapacity:   #checks if current page range is full
@@ -107,6 +110,8 @@ class Table:
         self.getCurBP().insertRecBP(*columns, RID, start_time, schema_encoding, indirection) #now insert         
         self.num_records += 1                                   #update table's numRecords
         self.updateCurRecord()                                  #update record index for current BP
+        key = get_key(RID)
+        add_node(key,RID)
     
     def __merge(self):
         print("merge is happening")
