@@ -106,7 +106,7 @@ class TailPage:
             else:
                 schema = schema + '0'
 
-        schema_encoding.append(schema) #puts the schema encoding in
+        self.schema_encoding.append(schema) #puts the schema encoding in
         self.num_records += 1
 
 #Should have 16 BPs each BP with 4k Pages and each BP can have 4k records (1 record is a value from each page in BP)
