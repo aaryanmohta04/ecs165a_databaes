@@ -106,11 +106,10 @@ class Query:
     """
     def update(self, primary_key, *columns):
         rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
-        pageRange = self.table.pageRange[rid[0]] #uses page range part in RID to find correct pageRange in table
-        currentRid = pageRange.basePages[rid[1]].indirection[rid[2]] #finds currentRID by going into basePages array at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
-        if pageRange.tailPages[pageRange.num_tail_pages()-1].has_capacity() == False:
-            pageRange.add_tail_page()
-        tailPage = pageRange.tailPages[pageRange.num_tail_pages()-1]
+        currentRid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
+        if self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1].has_capacity() == False:
+            self.table.pageRange[rid[0]].add_tail_page()
+        tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1]
         
         
         #need the RID somehow (index?)
