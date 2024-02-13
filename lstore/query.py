@@ -133,8 +133,12 @@ class Query:
     """
     def sum(self, start_range, end_range, aggregate_column_index):
         rids = table.index.locate_range(start_range,end_range, aggregate_column_index)
+        sum = 0
         for rid in rids:
             rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            column = self.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
+            sum += column[8*rid[2]]
+        return sum
         pass
 
     
@@ -148,7 +152,19 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
-
+        rids = table.index.locate_range(start_range,end_range, aggregate_column_index)
+        sum = 0
+        
+        for rid in rids: 
+            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
+            while relative_version != 0: 
+                rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+                relative_version += 1
+         
+        for rid in rids:
+            column = self.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
+            sum += column[8*rid[2]]
+        return sum
         pass
 
     
