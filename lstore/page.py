@@ -59,6 +59,7 @@ class BasePage:
         self.indirection = []
         self.pages = []
         self.num_records = 0
+        self.num_cols = numCols
 
         #create array of pages/cols (4 allocated for schema, indirection, rid, start time)
         for i in numCols:
@@ -71,7 +72,7 @@ class BasePage:
             return False
             
     def insertRecBP(self, *columns, RID, start_time, schema_encoding, indirection):
-        for i in numCols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
+        for i in self.num_cols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.pages[i].write(columns[i])
         self.num_records += 1
         self.rid.append(RID)
