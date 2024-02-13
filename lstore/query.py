@@ -21,7 +21,10 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
-        rid = 
+        primary_key_column = 0 
+        rids = self.table.index.locate(primary_key_column, primary_key)
+        rid = rids[0]
+        self.PageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
         pass
     
     

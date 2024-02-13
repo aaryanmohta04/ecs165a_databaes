@@ -29,7 +29,7 @@ class Page:
 
     def write(self, value):
         # 8 bytes per record
-        self.data[num_records * 8] = value
+        self.data[self.num_records * 8] = value
         self.num_records += 1
         
     def find_value(self,value):
@@ -99,7 +99,7 @@ class TailPage:
 
     def insertRecTP(self, *columns):
         schema = '' #added schema encoding here because it's where I iterate through the data anyway
-        for j in numCols:
+        for j in self.numCols:
             if columns[j] != None:
                 self.pages[j].write(columns[j])
                 schema = schema + '1'
