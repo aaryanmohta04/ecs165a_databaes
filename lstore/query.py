@@ -36,12 +36,10 @@ class Query:
     def insert(self, *columns):
         start_time = datetime.now().strftime("%Y%m%d%H%M%S")
         schema_encoding = '0' * self.table.num_columns  #add '0000...' for schema_encoding
-        self.table.insertRec(*columns, start_time, schema_encoding) #call function in Table.py to insert record
+        self.table.insertRec(start_time, schema_encoding, *columns) #call function in Table.py to insert record
         
-
         return True
         
-        pass
 
     # For select, gives only desired columns
     def modify_columns(self, record, projected_columns_index):

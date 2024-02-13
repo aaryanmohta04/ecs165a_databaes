@@ -30,7 +30,6 @@ class Table:
         self.num_columns = num_columns
         self.page_directory = []
         self.index = Index(self)
-        self.num_records = 0
 
         #array for the page ranges
         self.pageRange = []
@@ -50,7 +49,6 @@ class Table:
 
         self.pageRange.append(page_range) #adding new page range to page range array
         self.curPageRange = len(self.pageRange) - 1 #update current page range
-        self.num_records += MAX_RECORDS_PER_PAGE_RANGE
         
     def get_page_range(self):
         if self.pageRange[self.curPageRange].has_capacity():
@@ -95,8 +93,8 @@ class Table:
     def get_key(self, RID):
         return self.pageRange[RID[0]].basePages[RID[1]].pages[0] + 8*RID[3]
     
-    def insertRec(self, *columns, start_time, schema_encoding):
-        if self.getCurBP().hasCapacity == False:                #checks if current BP is full
+    def insertRec(self, start_time, schema_encoding, *columns):
+        if self.getCurBP().has_capacity == False:                #checks if current BP is full
             if self.pageRange[self.curPageRange].hasCapacity:   #checks if current page range is full
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
                  self.updateCurBP()                             #updates current BP to new BP
@@ -107,7 +105,7 @@ class Table:
                                                                       
         RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
         indirection = RID                                       #add RID to indirection column since this is insert, not update
-        self.getCurBP().insertRecBP(*columns, RID, start_time, schema_encoding, indirection) #now insert         
+        self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert         
         self.num_records += 1                                   #update table's numRecords
         self.updateCurRecord()                                  #update record index for current BP
         key = get_key(RID)

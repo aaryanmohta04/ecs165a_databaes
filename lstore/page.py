@@ -71,7 +71,7 @@ class BasePage:
         else:
             return False
             
-    def insertRecBP(self, *columns, RID, start_time, schema_encoding, indirection):
+    def insertRecBP(self, RID, start_time, schema_encoding, indirection, *columns):
         for i in self.num_cols: #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.pages[i].write(columns[i])
         self.num_records += 1
