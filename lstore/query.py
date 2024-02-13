@@ -109,18 +109,34 @@ class Query:
     """
     def update(self, primary_key, *columns):
         rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
-        currentRid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
-        if self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1].has_capacity() == False: #check if current tailPage has capacity
-            self.table.pageRange[rid[0]].add_tail_page()
+        pageRangeIndex = rid[0]
+        pageIndex = rid[1]
+        recordIndex = rid[2]
+        currentRid = self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
+        currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1
+        if self.table.pageRange[pageRangeIndex].tailPages[currentTP].has_capacity() == False: #check if current tailPage has capacity
+            self.table.pageRange[pageRangeIndex].add_tail_page()
+            currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
         #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure if can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
-        self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1].insertRecTP(*columns) #calls the insertion of record in Page.py (insertRecTP)
-        
-        #need the RID somehow (index?)
-        #use the key or RID to get the right record in Table.py
-        #in Table.py, can check if tail record is full or needs to be made
-        #can then call insertRecTP
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns) #calls the insertion of record in Page.py (insertRecTP)
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(currentRID) #sets indirection of updated record to previous update
 
-        #will have to update tailPage (schema, indirection, records)
+
+        newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
+        updateRID = (self.table.pageRange[pageRangeIndex], currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].rid.append(updateRID) #updates the RID of updated record
+
+        self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] = updateRID #also puts new RID of updated record into basePages indirection to point to newest updated record
+        for i in self.table.num_columns: #for each column, check if schema is 1 in tail page, and if so, set it to 1 in base page
+            if  self.table.pageRange[pageRangeIndex].tailPages[currentTP].schema_encoding[newRecordIndex][i] == 1:
+                   self.table.pageRange[pageRangeIndex].basePages[pageIndex].schema_encoding[recordIndex][i] = 1
+        
+        #need the RID somehow (index?) (Done???)
+        #use the key or RID to get the right record in Table.py (DONE)
+        #in Table.py, can check if tail record is full or needs to be made (DONE)
+        #can then call insertRecTP (DONE)
+
+        #will have to update tailPage (schema, indirection, records, RID) (DONE)
         #will have to update base page record (schema, indirection)
         pass
 
