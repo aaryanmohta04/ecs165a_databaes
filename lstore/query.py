@@ -105,9 +105,9 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
-        rid = self.table.index.locate(self.table.key, primary_key)
-        pageRange = self.table.pageRange[rid[0]]
-        currentRid = pageRange.basePages[rid[1]].indirection[rid[2]]
+        rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
+        pageRange = self.table.pageRange[rid[0]] #uses page range part in RID to find correct pageRange in table
+        currentRid = pageRange.basePages[rid[1]].indirection[rid[2]] #finds currentRID by going into basePages array at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
         if pageRange.tailPages[pageRange.num_tail_pages()-1].has_capacity() == False:
             pageRange.add_tail_page()
         tailPage = pageRange.tailPages[pageRange.num_tail_pages()-1]
