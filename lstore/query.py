@@ -107,17 +107,19 @@ class Query:
     def update(self, primary_key, *columns):
         rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
         currentRid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
-        if self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1].has_capacity() == False: #check if current tailPage has capacity
+        currentTP = self.table.pageRange[rid[0]].num_tail_pages()-1
+        if self.table.pageRange[rid[0]].tailPages[currentTP].has_capacity() == False: #check if current tailPage has capacity
             self.table.pageRange[rid[0]].add_tail_page()
         #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure if can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
-        self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1].insertRecTP(*columns) #calls the insertion of record in Page.py (insertRecTP)
+        self.table.pageRange[rid[0]].tailPages[currentTP].insertRecTP(*columns) #calls the insertion of record in Page.py (insertRecTP)
+        self.table.pageRange[rid[0]].tailPages[currentTP].indirection.append(currentRID) #sets indirection of updated record to previous update
         
         #need the RID somehow (index?)
-        #use the key or RID to get the right record in Table.py
-        #in Table.py, can check if tail record is full or needs to be made
-        #can then call insertRecTP
+        #use the key or RID to get the right record in Table.py (DONE)
+        #in Table.py, can check if tail record is full or needs to be made (DONE)
+        #can then call insertRecTP (DONE)
 
-        #will have to update tailPage (schema, indirection, records)
+        #will have to update tailPage (schema, indirection, records) (DONE)
         #will have to update base page record (schema, indirection)
         pass
 
