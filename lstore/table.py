@@ -1,5 +1,5 @@
 from lstore.index import Index
-from lstore.index import Page #added Page because pdf says Table uses Page internally
+#from lstore.index import Page #added Page because pdf says Table uses Page internally
 from time import time
 from lstore.page import PageRange
 import numpy as np
@@ -84,11 +84,11 @@ class Table:
         if(rid[3] == 'b'):
             for i in projected_columns_index:
                 if (i == 1):
-                    record.append(self.PageRange[rid[0]].basePages[rid[1]].pages[i][rid[2] * 8])
+                    record.append(self.pageRange[rid[0]].basePages[rid[1]].pages[i][rid[2] * 8])
         else:
            for i in projected_columns_index:
                 if (i == 1):
-                    record.append(self.PageRange[rid[0]].tailPages[rid[1]].pages[i][rid[2] * 8]) 
+                    record.append(self.pageRange[rid[0]].tailPages[rid[1]].pages[i][rid[2] * 8]) 
         return record 
         pass
     
@@ -105,7 +105,7 @@ class Table:
                  self.updateCurBP()                             #adding a new page range should have set the current page range 
                                                                 # to the new one and added a new base page to it
                                                                       
-        RID  = self.table.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
+        RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
         indirection = RID                                       #add RID to indirection column since this is insert, not update
         self.getCurBP().insertRecBP(*columns, RID, start_time, schema_encoding, indirection) #now insert         
         self.num_records += 1                                   #update table's numRecords

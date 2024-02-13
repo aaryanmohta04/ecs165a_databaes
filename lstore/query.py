@@ -1,6 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
-
+from datetime import datetime
 
 class Query:
     """
@@ -24,7 +24,7 @@ class Query:
         primary_key_column = 0 
         rids = self.table.index.locate(primary_key_column, primary_key)
         rid = rids[0]
-        self.PageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
+        self.table.PageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
         pass
     
     
@@ -44,11 +44,11 @@ class Query:
         pass
 
     # For select, gives only desired columns
-    def modify_columns(record, projected_columns_index):
+    def modify_columns(self, record, projected_columns_index):
         new_record = []
         for i in range(len(record.columns)):
             if projected_columns_index[i] == 1:
-                new_record.append[record.columns[i]]
+                new_record.append(record.columns[i])
         
         return new_record
     
@@ -69,7 +69,7 @@ class Query:
         records = []
             
         for rid in rids:
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
             record = self.table.find_record(rid, projected_columns_index)
             records.append(record)
         return records
@@ -90,9 +90,9 @@ class Query:
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         rids = self.table.index.locate(search_key_index, search_key)
         for rid in rids: 
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
+            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
             while relative_version != 0: 
-                rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+                rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
                 relative_version += 1
             records = []
             
@@ -115,11 +115,11 @@ class Query:
         currentRid = self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
         currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1
         if self.table.pageRange[pageRangeIndex].tailPages[currentTP].has_capacity() == False: #check if current tailPage has capacity
-            self.table.pageRange[pageRangeIndex].add_tail_page()
+            self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns)
             currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
         #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure if can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns) #calls the insertion of record in Page.py (insertRecTP)
-        self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(currentRID) #sets indirection of updated record to previous update
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(currentRid) #sets indirection of updated record to previous update
 
 
         newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
@@ -150,11 +150,11 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum(self, start_range, end_range, aggregate_column_index):
-        rids = table.index.locate_range(start_range,end_range, aggregate_column_index)
+        rids = self.table.index.locate_range(start_range,end_range, aggregate_column_index)
         sum = 0
         for rid in rids:
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-            column = self.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
+            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
             sum += column[8*rid[2]]
         return sum
         pass
@@ -170,17 +170,17 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
-        rids = table.index.locate_range(start_range,end_range, aggregate_column_index)
+        rids = self.table.index.locate_range(start_range,end_range, aggregate_column_index)
         sum = 0
         
         for rid in rids: 
-            rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
+            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
             while relative_version != 0: 
-                rid = self.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+                rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
                 relative_version += 1
-         
+
         for rid in rids:
-            column = self.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
+            column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
             sum += column[8*rid[2]]
         return sum
         pass
