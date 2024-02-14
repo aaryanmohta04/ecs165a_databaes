@@ -41,7 +41,7 @@ for key in records:
     # check for retreiving version -1. Should retreive version 0 since only one version exists.
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -1)[0]
     error = False
-    for i, column in enumerate(record.columns):
+    for i, column in enumerate(record.column):
         if column != records[key][i]:
             error = True
     if error:
@@ -49,7 +49,7 @@ for key in records:
     else:
         pass
         # print('select on', key, ':', record)
-
+    
 updated_records = {}
 for key in records:
     updated_columns = [None, None, None, None, None]

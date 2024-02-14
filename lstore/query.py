@@ -60,16 +60,15 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, search_key, search_key_index, projected_columns_index):
-        if self.table.index.has_index(search_key_index) == False:
-            self.table.index.create_index(search_key_index)
+        # if self.table.index.has_index(search_key_index) == False:
+        #     self.table.index.create_index(search_key_index)
         
-        rids = self.table.index.locate(search_key_index, search_key)
+        rid = self.table.index.locate(search_key_index, search_key)
         records = []
-            
-        for rid in rids:
-            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-            record = self.table.find_record(rid, projected_columns_index)
-            records.append(record)
+        
+        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+        record = self.table.find_record(rid, projected_columns_index)
+        records.append(record)
         return records
         pass
     
@@ -86,17 +85,18 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
-        rids = self.table.index.locate(search_key_index, search_key)
-        for rid in rids: 
-            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
-            while relative_version != 0: 
-                rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-                relative_version += 1
-            records = []
-            
-        for rid in rids:
-            record = self.table.find_record(rid, projected_columns_index)
-            records.append(record)
+        rid = self.table.index.locate(search_key_index, search_key)
+        #for rid in rids: 
+        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
+           
+        while relative_version != 0: 
+            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            relative_version += 1
+        records = []
+        #for rid in rids:
+        record = self.table.find_record(rid, projected_columns_index)
+        records.append(record)
+        return records
         pass
 
     

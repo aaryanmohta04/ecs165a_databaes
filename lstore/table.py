@@ -73,7 +73,6 @@ class Table:
     def createBP_RID(self):
        
         tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b') 
-        print(str(tupleRID))
         self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
    
@@ -82,13 +81,15 @@ class Table:
          # updating rid to the latest version of the record. 
         record = []
         if(rid[3] == 'b'):
-            for i in projected_columns_index:
-                if (i == 1):
-                    record.append(self.pageRange[rid[0]].basePages[rid[1]].pages[i][rid[2] * 8])
+            for i in range(len(projected_columns_index)):
+                if (projected_columns_index[i] == 1):
+                    bytearray = self.pageRange[rid[0]].basePages[rid[1]].pages[i].data
+                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
+                    record.append(value)
         else:
-           for i in projected_columns_index:
-                if (i == 1):
-                    record.append(self.pageRange[rid[0]].tailPages[rid[1]].pages[i][rid[2] * 8]) 
+           for i in range(len(projected_columns_index)):
+                if (projected_columns_index[i] == 1):
+                    record.append(self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data[rid[2] * 8]) 
         return record 
         pass
     
@@ -99,7 +100,6 @@ class Table:
     def insertRec(self, start_time, schema_encoding, *columns):
         if self.getCurBP().has_capacity() == False:                #checks if current BP is full
             if self.pageRange[self.curPageRange].has_capacity():  #checks if current page range is full
-                 print("adding base page")
                  self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
                  self.updateCurBP()
                  self.updateCurRecord()                             #updates current BP to new BP
