@@ -112,7 +112,13 @@ class Query:
         recordIndex = rid[2]
         currentRid = self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
         currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1
-        if self.table.pageRange[pageRangeIndex].tailPages[currentTP].has_capacity() == False: #check if current tailPage has capacity
+        if currentTP == -1: #if no tail pages exist, it'll be set to -1, so set it to 0
+            currentTP = 0
+            
+        if len(self.table.pageRange[pageRangeIndex].tailPages) == 0: #checks if a tailPage has ever been created
+                self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns) 
+                currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
+        elif self.table.pageRange[pageRangeIndex].tailPages[currentTP].has_capacity() == False: #check if current tailPage has capacity
             self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns)
             currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
         #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure if can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
