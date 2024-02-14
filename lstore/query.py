@@ -22,10 +22,10 @@ class Query:
     """
     def delete(self, primary_key):
         primary_key_column = 0 
-        rids = self.table.index.locate(primary_key_column, primary_key)
-        rid = rids[0]
-        self.table.PageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
+        rid = self.table.index.locate(primary_key_column, primary_key)
+        self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
         pass
+    
     
     
     """
@@ -158,8 +158,8 @@ class Query:
         sum = 0
         for rid in rids:
             rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-            column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
-            sum += column[8*rid[2]]
+            column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
+            sum += (int.from_bytes(column[rid[2]*8:rid[2]*8 + 8], byteorder = 'big'))
         return sum
         pass
 
