@@ -131,7 +131,7 @@ class Query:
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].rid.append(updateRID) #updates the RID of updated record
 
         self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] = updateRID #also puts new RID of updated record into basePages indirection to point to newest updated record
-        for i in self.table.num_columns: #for each column, check if schema is 1 in tail page, and if so, set it to 1 in base page
+        for i in range(self.table.num_columns): #for each column, check if schema is 1 in tail page, and if so, set it to 1 in base page
             if  self.table.pageRange[pageRangeIndex].tailPages[currentTP].schema_encoding[newRecordIndex][i] == 1:
                    self.table.pageRange[pageRangeIndex].basePages[pageIndex].schema_encoding[recordIndex][i] = 1
         
