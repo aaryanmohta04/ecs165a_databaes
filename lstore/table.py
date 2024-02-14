@@ -106,6 +106,7 @@ class Table:
             else: #if is
                  self.add_page_range(self.num_columns)          #add a new page range
                  self.updateCurBP()                             #adding a new page range should have set the current page range 
+                 self.updateCurRecord()
                                                                 # to the new one and added a new base page to it
                                                                       
         RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
