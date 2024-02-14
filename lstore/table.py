@@ -89,7 +89,9 @@ class Table:
         else:
            for i in range(len(projected_columns_index)):
                 if (projected_columns_index[i] == 1):
-                    record.append(self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data[rid[2] * 8]) 
+                    bytearray = self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data
+                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
+                    record.append(value) 
         return record 
         pass
     

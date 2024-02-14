@@ -127,7 +127,7 @@ class Query:
 
 
         newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
-        updateRID = (self.table.pageRange[pageRangeIndex], currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
+        updateRID = (pageRangeIndex, currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].rid.append(updateRID) #updates the RID of updated record
 
         self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] = updateRID #also puts new RID of updated record into basePages indirection to point to newest updated record
@@ -158,7 +158,10 @@ class Query:
         sum = 0
         for rid in rids:
             rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-            column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
+            if(rid[3] == 'b'):
+                column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
+            else:
+                column = self.table.pageRange[rid[0]].tailPages[rid[1]].pages[aggregate_column_index].data
             sum += (int.from_bytes(column[rid[2]*8:rid[2]*8 + 8], byteorder = 'big'))
         return sum
         pass
