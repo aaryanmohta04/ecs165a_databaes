@@ -88,7 +88,7 @@ class TailPage:
         self.schema_encoding = []
         self.num_records = 0
 
-        for i in numCols:
+        for i in range(numCols):
             self.pages.append(Page())
 
     def has_capacity(self):
@@ -139,5 +139,5 @@ class PageRange:
         if self.has_capacity():
             self.basePages.append(BasePage(numCols))
             self.num_base_pages += 1
-            print("base page has been added")
+            #print("base page has been added")
       
