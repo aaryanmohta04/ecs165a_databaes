@@ -41,7 +41,7 @@ for key in records:
     # check for retreiving version -1. Should retreive version 0 since only one version exists.
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -1)[0]
     error = False
-    for i, column in enumerate(record.column):
+    for i, column in enumerate(record):
         if column != records[key][i]:
             error = True
     if error:
@@ -49,6 +49,7 @@ for key in records:
     else:
         pass
         # print('select on', key, ':', record)
+print("Select finished")
     
 updated_records = {}
 for key in records:
@@ -65,7 +66,7 @@ for key in records:
     #check version -1 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -1)[0]
     error = False
-    for j, column in enumerate(record.columns):
+    for j, column in enumerate(record):
         if column != records[key][j]:
             error = True
     if error:
@@ -77,7 +78,7 @@ for key in records:
     #check version -2 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -2)[0]
     error = False
-    for j, column in enumerate(record.columns):
+    for j, column in enumerate(record):
         if column != records[key][j]:
             error = True
     if error:
@@ -89,7 +90,7 @@ for key in records:
     #check version 0 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], 0)[0]
     error = False
-    for j, column in enumerate(record.columns):
+    for j, column in enumerate(record):
         if column != updated_records[key][j]:
             error = True
     if error:
@@ -123,3 +124,5 @@ for c in range(0, grades_table.num_columns):
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', updated_result, ', correct: ', updated_column_sum)
         else:
             pass
+
+print("is this working??")

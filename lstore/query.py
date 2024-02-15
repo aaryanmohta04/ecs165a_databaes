@@ -187,8 +187,11 @@ class Query:
                 relative_version += 1
 
         for rid in rids:
-            column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index]
-            sum += column[8*rid[2]]
+            if(rid[3] == 'b'):
+                column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
+            else:
+                column = self.table.pageRange[rid[0]].tailPages[rid[1]].pages[aggregate_column_index].data
+            sum += (int.from_bytes(column[rid[2]*8:rid[2]*8 + 8], byteorder = 'big'))
         return sum
         pass
 
