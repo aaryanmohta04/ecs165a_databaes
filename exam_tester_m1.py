@@ -49,8 +49,7 @@ for key in records:
     else:
         pass
         # print('select on', key, ':', record)
-print("Select finished")
-    
+
 updated_records = {}
 for key in records:
     updated_columns = [None, None, None, None, None]
@@ -124,5 +123,3 @@ for c in range(0, grades_table.num_columns):
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', updated_result, ', correct: ', updated_column_sum)
         else:
             pass
-
-print("is this working??")

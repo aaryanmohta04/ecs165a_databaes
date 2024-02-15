@@ -97,13 +97,14 @@ class TailPage:
         else:
             return False
 
-    def insertRecTP(self, *columns):
+    def insertRecTP(self, *columns, record):
         schema = '' #added schema encoding here because it's where I iterate through the data anyway
         for j in range(len(columns)):
             if columns[j] != None:
                 self.pages[j].write(columns[j])
                 schema = schema + '1'
             else:
+                self.pages[j].write(record[j])
                 schema = schema + '0'
 
         self.schema_encoding.append(schema) #puts the schema encoding in

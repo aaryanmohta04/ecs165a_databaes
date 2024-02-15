@@ -87,10 +87,14 @@ class Query:
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         rid = self.table.index.locate(search_key_index, search_key)
         #for rid in rids: 
-        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
-           
+        baseRID = rid
+        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same  
         while relative_version != 0: 
-            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            if(rid[3] == 'b'):
+                if(rid != baseRID):
+                     rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            else: 
+                rid = self.table.pageRange[rid[0]].tailPages[rid[1]].indirection[rid[2]]
             relative_version += 1
         records = []
         #for rid in rids:
@@ -110,11 +114,15 @@ class Query:
         pageRangeIndex = rid[0]
         pageIndex = rid[1]
         recordIndex = rid[2]
+        oldRID = rid
         currentRid = self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
+        projected_columns_index = []
+        for i in range(self.table.num_columns):
+            projected_columns_index.append(1)
+        record = self.table.find_record(currentRid, projected_columns_index)
         currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1
         if currentTP == -1: #if no tail pages exist, it'll be set to -1, so set it to 0
             currentTP = 0
-            
         if len(self.table.pageRange[pageRangeIndex].tailPages) == 0: #checks if a tailPage has ever been created
                 self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns) 
                 currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
@@ -122,14 +130,13 @@ class Query:
             self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns)
             currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
         #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure if can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
-        self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns) #calls the insertion of record in Page.py (insertRecTP)
-        self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(currentRid) #sets indirection of updated record to previous update
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns, record = record) #calls the insertion of record in Page.py (insertRecTP)
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(oldRID) #sets indirection of updated record to previous update
 
 
         newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
         updateRID = (pageRangeIndex, currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].rid.append(updateRID) #updates the RID of updated record
-
         self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] = updateRID #also puts new RID of updated record into basePages indirection to point to newest updated record
         for i in range(self.table.num_columns): #for each column, check if schema is 1 in tail page, and if so, set it to 1 in base page
             if  self.table.pageRange[pageRangeIndex].tailPages[currentTP].schema_encoding[newRecordIndex][i] == 1:
@@ -179,11 +186,17 @@ class Query:
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
         rids = self.table.index.locate_range(start_range,end_range, aggregate_column_index)
         sum = 0
-        
-        for rid in rids: 
-            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same
+        relative_version_copy = relative_version
+        for i in range(len(rids)): 
+            baseRID = rids[i]
+            rids[i] = self.table.pageRange[rids[i][0]].basePages[rids[i][1]].indirection[rids[i][2]] # converts base page rid to tail rid if any, else remains same
+            relative_version = relative_version_copy
             while relative_version != 0: 
-                rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+                if(rids[i][3] == 'b'):
+                    if(rids[i] != baseRID):
+                        rids[i] = self.table.pageRange[rids[i][0]].basePages[rids[i][1]].indirection[rids[i][2]]
+                else: 
+                    rids[i] = self.table.pageRange[rids[i][0]].tailPages[rids[i][1]].indirection[rids[i][2]]
                 relative_version += 1
 
         for rid in rids:
@@ -197,7 +210,7 @@ class Query:
 
     
     """
-    incremenets one column of the record
+    increments one column of the record
     this implementation should work if your select and update queries already work
     :param key: the primary of key of the record to increment
     :param column: the column to increment
