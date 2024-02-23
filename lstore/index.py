@@ -57,5 +57,10 @@ class Index:
         if self.indices[0] == None:                      # If column has no index
             self.create_index(0)
         self.indices[0][key] = rid
+        
+    def update_index(self, rid, *columns):
+        for key in columns:
+            self.add_node(key, rid)
+
                       
             
