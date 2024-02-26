@@ -104,7 +104,7 @@ class TailPage:
                 self.pages[j].write(columns[j])
                 schema = schema + '1'
             else:
-                self.pages[j].write(record[j])
+                self.pages[j].write(record.columns[j])
                 schema = schema + '0'
 
         self.schema_encoding.append(schema) #puts the schema encoding in
