@@ -29,7 +29,7 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns
-        self.page_directory = []
+        self.page_directory = {}
         self.index = Index(self)
 
         #array for the page ranges
@@ -80,6 +80,7 @@ class Table:
     def find_record(self,key,  rid, projected_columns_index):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
+        self.page_directory[rid] = rid
         record = []
         if(rid[3] == 'b'):
             for i in range(len(projected_columns_index)):
@@ -114,13 +115,20 @@ class Table:
                                                                 # to the new one and added a new base page to it
                                                                       
         RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
+        self.page_directory[RID] = RID
         indirection = RID                                       #add RID to indirection column since this is insert, not update
         self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecords
         self.updateCurRecord()                                  #update record index for current BP
         key = columns[0]
         self.index.add_node(key,RID)
     
-    def __merge(self):
+    def __merge(self, PageRangeNumber):
+        # function called on a page range when a certain limit is reached
+        # assume that where this function is called, we already have implemented a diffferent thread for merging, and the pagerange ID to be merged is passed as an integer. 
+        PageRange = self.pageRange[PageRangeNumber] # get page range from self object. This should later be changed to pulling data from the file on a disk
+
+        # 
         print("merge is happening")
+
         pass
  

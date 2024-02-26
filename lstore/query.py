@@ -65,7 +65,7 @@ class Query:
         
         rid = self.table.index.locate(search_key_index, search_key)
         records = []
-        
+        rid = self.table.page_directory[rid]
         rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
         record = self.table.find_record(search_key, rid, projected_columns_index)
         records.append(record)
@@ -111,6 +111,7 @@ class Query:
     """
     def update(self, primary_key, *columns):
         rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
+        rid = self.table.page_directory[rid]
         pageRangeIndex = rid[0]
         pageIndex = rid[1]
         recordIndex = rid[2]
@@ -136,6 +137,7 @@ class Query:
 
         newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
         updateRID = (pageRangeIndex, currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
+        self.table.page_directory[updateRID] = updateRID 
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].rid.append(updateRID) #updates the RID of updated record
         self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] = updateRID #also puts new RID of updated record into basePages indirection to point to newest updated record
         for i in range(self.table.num_columns): #for each column, check if schema is 1 in tail page, and if so, set it to 1 in base page
@@ -164,7 +166,9 @@ class Query:
         rids = self.table.index.locate_range(start_range,end_range, aggregate_column_index)
         sum = 0
         for rid in rids:
+            rid = self.table.page_directory[rid]
             rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+            rid = self.table.page_directory[rid]
             if(rid[3] == 'b'):
                 column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
             else:
@@ -189,7 +193,10 @@ class Query:
         relative_version_copy = relative_version
         for i in range(len(rids)): 
             baseRID = rids[i]
+            baseRID = self.table.page_directory[baseRID]
+            rids[i] = self.table.page_directory[rids[i]]
             rids[i] = self.table.pageRange[rids[i][0]].basePages[rids[i][1]].indirection[rids[i][2]] # converts base page rid to tail rid if any, else remains same
+
             relative_version = relative_version_copy
             while relative_version != 0: 
                 if(rids[i][3] == 'b'):
