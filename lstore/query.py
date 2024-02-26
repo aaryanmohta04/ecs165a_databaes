@@ -67,7 +67,7 @@ class Query:
         records = []
         rid = self.table.page_directory[rid]
         rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-        record = self.table.find_record(rid, projected_columns_index)
+        record = self.table.find_record(search_key, rid, projected_columns_index)
         records.append(record)
         return records
         pass
@@ -98,7 +98,7 @@ class Query:
             relative_version += 1
         records = []
         #for rid in rids:
-        record = self.table.find_record(rid, projected_columns_index)
+        record = self.table.find_record(search_key, rid, projected_columns_index)
         records.append(record)
         return records
         pass
@@ -120,7 +120,7 @@ class Query:
         projected_columns_index = []
         for i in range(self.table.num_columns):
             projected_columns_index.append(1)
-        record = self.table.find_record(currentRid, projected_columns_index)
+        record = self.table.find_record(primary_key, currentRid, projected_columns_index)
         currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1
         if currentTP == -1: #if no tail pages exist, it'll be set to -1, so set it to 0
             currentTP = 0

@@ -41,7 +41,7 @@ for key in records:
     # check for retreiving version -1. Should retreive version 0 since only one version exists.
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -1)[0]
     error = False
-    for i, column in enumerate(record):
+    for i, column in enumerate(record.columns):
         if column != records[key][i]:
             error = True
     if error:
@@ -66,7 +66,7 @@ for key in records:
     #check version -1 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -1)[0]
     error = False
-    for j, column in enumerate(record):
+    for j, column in enumerate(record.columns):
         if column != records[key][j]:
             error = True
     if error:
@@ -78,7 +78,7 @@ for key in records:
     #check version -2 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -2)[0]
     error = False
-    for j, column in enumerate(record):
+    for j, column in enumerate(record.columns):
         if column != records[key][j]:
             error = True
     if error:
@@ -90,7 +90,7 @@ for key in records:
     #check version 0 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], 0)[0]
     error = False
-    for j, column in enumerate(record):
+    for j, column in enumerate(record.columns):
         if column != updated_records[key][j]:
             error = True
     if error:

@@ -17,6 +17,7 @@ class Record:
         self.key = key
         self.columns = columns
 
+
 class Table:
 
     """
@@ -75,8 +76,8 @@ class Table:
         tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b') 
         self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
-   
-    def find_record(self, rid, projected_columns_index):
+    
+    def find_record(self,key,  rid, projected_columns_index):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
         self.page_directory[rid] = rid
@@ -93,7 +94,8 @@ class Table:
                     bytearray = self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data
                     value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
                     record.append(value) 
-        return record 
+        retval = Record(key, rid, record)
+        return retval 
         pass
     
     def get_key(self, RID):
