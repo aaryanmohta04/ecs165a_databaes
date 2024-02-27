@@ -32,8 +32,8 @@ class Bufferpool:
             frame_index = self.numFrames
             self.frames.append(Frame(path, numColumns))
         
-        self.frames[frame_index].set_pin()
-        self.frames[frame_index].set_pin()
+        self.frames[frame_index].pin_page()
+        self.frames[frame_index].pin_page()
         
         #Read in values
         for i in numColumns:
@@ -60,8 +60,14 @@ class Frame:
         else:
             dirtyBit = True
         
-    def set_pin(self):
-        if pin == True:
-            pin = False
+   def pin_page(self):
+        self.pinNum += 1
+
+    def unpin_page(self):
+        self.pinNum -= 1
+
+    def isPinned(self):
+        if self.pinNum == 0:
+            return False
         else:
-            pin = True
+            return True
