@@ -23,14 +23,16 @@ class Bufferpool:
     #LRU, send to disk
     def evict_page(self):
         page_to_evict = self.frames[0]
+        evict_index = 0
         for i in (len(self.frames) - 1):
             if self.frames[i] > self.frames[i + 1]:
                 page_to_evict = self.frames[i + 1]
+                evict_index = i + 1
 
         if(page_to_evict.dirtyBit == TRUE):
             #write contents of page to disk
             pass
-        return page_to_evict
+        return evict_index
         #I'm thinking that if it's not dirty, we can just write over the info when we load, so we can just leave it and return which index it's at
     
     #Bring page in from disk, if full, evict a page first
