@@ -120,7 +120,7 @@ class PageRange:
         self.num_tail_pages = 0
         self.basePages = []
         self.tailPages = []
-        self.TPS = 0 # Or max?
+        self.TPS = [0,0] # Or max?
 
         self.add_base_page(numCols) #every time page range created populate with one base page
     

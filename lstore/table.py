@@ -81,6 +81,11 @@ class Table:
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
         rid = self.page_directory[rid]
+        if(rid[3]== 't'):
+            if self.greaterthan(self.pageRange[rid[0]].TPS, [rid[1], rid[2]]):
+                rid = self.pageRange[rid[0]].tailPages[rid[1]].BaseRID
+                rid = self.page_directory[rid]
+
         record = []
         if(rid[3] == 'b'):
             for i in range(len(projected_columns_index)):
@@ -137,17 +142,19 @@ class Table:
         # function called on a page range when a certain limit is reached
         # assume that where this function is called, we already have implemented a diffferent thread for merging, and the pagerange ID to be merged is passed as an integer. 
         PageRange = self.pageRange[PageRangeIndex] # get page range from self object. This should later be changed to pulling data from the file on a disk
+        newpagedirectory = self.table.page_directory
         current_tail_page = len(PageRange.tailPages) - 1
         current_tail_record = len(PageRange.tailPages[current_tail_page].rid) - 1
         oldTPS = PageRange.TPS 
         newTPS = [current_tail_page, current_tail_record]
-        def greaterthan(a, b):
-            if(a[0] > b[0]):
-                return True
-            elif(a[0] == b[0]):
-                if(a[1] > b[1]):
-                    return True
-            return False
+
+    def greaterthan(self, a, b):
+        if(a[0] > b[0]):
+            return True
+        elif(a[0] == b[0]):
+            if(a[1] > b[1]):
+                 return True
+        return False
             
         newBasePages = PageRange.basePages #if not copy metadata then what do
         bitSignal =  np.array(0, 8192)
@@ -157,6 +164,7 @@ class Table:
             newPhysicalLocation = [baseRID[0], baseRID[1] + 16, baseRID[2], baseRID[3]] # loop through page directory later to implement this
             if(bitSignal[(baseRID[1] % 16) * 512 + (baseRID[2])] == 0):
                 bitSignal[(baseRID[1] % 16) * 512 + (baseRID[2])] = 1
+                newpagedirectory[baseRID] = newPhysicalLocation
                 updatedvalues = self.find_tail_rec_for_merge([PageRangeIndex, current_tail_page,current_tail_record, 't' ])
                 for i in range(len(self.num_columns)):
                     newBasePages[baseRID[1] % 16].pages[i][baseRID[1]: baseRID[1] + 8] = updatedvalues[i].to_bytes(8, byteorder='big')
@@ -165,12 +173,12 @@ class Table:
             if current_tail_record == -1: 
                 current_tail_record = 511
                 current_tail_record =-1
-        
+        self.pageRange.TPS = newTPS; 
         for newBasePage in newBasePages: 
             self.pageRange[PageRangeIndex].basePages.append(newBasePage)
 
 
-        # NEXT STEP IS TO UPDATE PAGE DIRECTORY. INDIRECTION COLUMNS FOR THESE UPDATES MADE ABOVE ARE flimsy, and sum, select, update need to be changed to check TPS as well
+        # NEXT STEP IS TO UPDATE PAGE DIRECTORY. (do this by swapping newpagedirectory and self.table.page_directory on the main thread)INDIRECTION COLUMNS FOR THESE UPDATES MADE ABOVE ARE flimsy, and sum, select, update need to be changed to check TPS as well
               
 
 
