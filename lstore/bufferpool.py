@@ -1,5 +1,7 @@
-from lstore.page import *
-
+from asyncio.windows_events import NULL
+from pickle import TRUE
+from lstore.table import Table
+from datetime import datetime
 
 # How many?
 FRAMECOUNT = 0
@@ -11,21 +13,28 @@ class Bufferpool:
         self.frames = []
         self.numFrames = 0
         self.path_to_root = path_to_root
-        self.frame_directory = {}
-        
+
     def has_capacity(self):
         if self.numFrames == FRAMECOUNT:
             return True
-        return false
+        return False
     
-    
-    #Select LRU(or whatever method), send to disk
+    #LRU, send to disk
     def evict_page(self):
-        pass
+        page_to_evict = self.frames[0]
+        for i in (len(self.frames) - 1):
+            if self.frames[i] > self.frames[i + 1]:
+                page_to_evict = self.frames[i + 1]
+
+        if(page_to_evict.dirtyBit == TRUE):
+            #write contents of page to disk
+            pass
+        return page_to_evict
+        #I'm thinking that if it's not dirty, we can just write over the info when we load, so we can just leave it and return which index it's at
     
     #Bring page in from disk, if full, evict a page first
-    def load_page(self, page_range_index, base_page_index, numColumns):
-        path_to_page = f"{self.path_to_root}/page_range_{page_range_index}/" \
+    """def load_page(self, page_range_index, base_page_index, numColumns, table_name):
+        path_to_page = f"{self.path_to_root}/{table_name}/page_range_{page_range_index}/" \
                            f"base_page_{base_page_index}.bin"
         if self.has_capacity():
             frame_index = self.evict_page()
@@ -34,48 +43,27 @@ class Bufferpool:
             frame_index = self.numFrames
             self.frames.append(Frame(path, numColumns))
         
-<<<<<<< Updated upstream
         self.frames[frame_index].pin_page()
         self.frames[frame_index].pin_page()
-=======
-        self.frames[frame_index].pin_page()
-
+        
+        #Read in values
         for i in numColumns:
-            #Read in values
-        
-        directory_key = (page_range_index, base_page_index)
-        self.frame_directory[directory_key] = frame_index
-        
-        self.frames[frame_index].unpin_page()
->>>>>>> Stashed changes
-        
-        pass
-    
-    def write_to_disk(self, frame_index):
-        frame = self.frames[frame_index]
-        columns = frame.columns
-        path_to_page = frame.path
-        if frame.dirtyBit == True:
-            bin = open(path_to_page, "wb")
-            for i in range(len(columns)):
-                # Write base/tail page
-            bin.close()
+            pass
+    """
     
     #Write all pages to disk
     def close(self):
-        for i in range(len(self.frames)):
-            if self.frames[i].dirtyBit == True:
-                self.write_to_disk(i)
         pass
-    
+        
 class Frame:
 
     def __init__(self, path, numColumns):
         
         self.dirtyBit = False
-        self.pin = False
+        self.pinNum = 0
         self.path = path
         self.columns = [None] * numColumns
+        self.lastAccess = 0
         
     def set_dirty_bit(self):
         if dirtyBit == True:
@@ -83,8 +71,9 @@ class Frame:
         else:
             dirtyBit = True
         
-   def pin_page(self):
+    def pin_page(self):
         self.pinNum += 1
+        self.lastAccess = datetime.now()
 
     def unpin_page(self):
         self.pinNum -= 1
