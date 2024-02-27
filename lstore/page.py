@@ -132,7 +132,7 @@ class PageRange:
             return True
         else:
             return False
-            
+    
     def mergePages(self):
         for tailPage in self.tailPages:
             for records in range(tailPage.num_records):
@@ -145,10 +145,9 @@ class PageRange:
                         for cols in range(len(schema_encoding)):
                             if schema_encoding[cols] == '1':
                                 writeInValue = tailPage.pages[cols].get_value(records)
-                                basePage.pages[cols].data[basePageRecord * 8 :(basePageRecord + 1) * 8] = int(writeInValue).to_bytes(8, byteorder = 'big')
+                                basePage.pages[cols].data[basePageRecord * 8 :(basePageRecord + 1) * 8] = int(writeInValue).to_bytes(8, byteorder = 'big') # Updating
+            break
 
-                        break
-                    
         self.tailPages = []
         self.num_tail_pages = 0
 
