@@ -133,6 +133,20 @@ class PageRange:
         else:
             return False
             
+    def mergePages(self):
+        for tailPage in self.tailPages:
+            for records in range(tailPage.num_records):
+                rid = tailPage.rid[records]
+                schema_encoding = tailPage.schema_encoding[records]
+
+                for basePage in self.basePages:
+                    if rid in basePage.rid:
+                        basePageRecord = basePage.rid.index(rid)
+                        for cols in range(len(schema_encoding)):
+                             
+        self.tailPages = []
+        self.num_tail_pages = 0
+
     def add_tail_page(self, numCols):
         self.tailPages.append(TailPage(numCols))
         self.num_tail_pages += 1
@@ -142,4 +156,6 @@ class PageRange:
             self.basePages.append(BasePage(numCols))
             self.num_base_pages += 1
             #print("base page has been added")
+
+            
       
