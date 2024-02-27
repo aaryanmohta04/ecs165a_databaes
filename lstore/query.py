@@ -23,6 +23,7 @@ class Query:
     def delete(self, primary_key):
         primary_key_column = 0 
         rid = self.table.index.locate(primary_key_column, primary_key)
+        rid = self.table.page_directory[rid]
         self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
         pass
     
@@ -37,7 +38,6 @@ class Query:
         start_time = datetime.now().strftime("%Y%m%d%H%M%S")
         schema_encoding = '0' * self.table.num_columns  #add '0000...' for schema_encoding
         self.table.insertRec(start_time, schema_encoding, *columns) #call function in Table.py to insert record
-        
         return True
         
 
@@ -111,11 +111,12 @@ class Query:
     """
     def update(self, primary_key, *columns):
         rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
+        BaseRID = rid
+        oldRID = rid
         rid = self.table.page_directory[rid]
         pageRangeIndex = rid[0]
         pageIndex = rid[1]
         recordIndex = rid[2]
-        oldRID = rid
         currentRid = self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
         projected_columns_index = []
         for i in range(self.table.num_columns):
@@ -133,6 +134,7 @@ class Query:
         #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure if can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns, record = record) #calls the insertion of record in Page.py (insertRecTP)
         self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(oldRID) #sets indirection of updated record to previous update
+        self.table.pageRange[pageRangeIndex].tailPages[currentTP].BaseRID.append(BaseRID)
 
 
         newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1

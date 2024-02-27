@@ -86,6 +86,7 @@ class TailPage:
         self.indirection = []
         self.pages = []
         self.schema_encoding = []
+        self.BaseRID = []
         self.num_records = 0
 
         for i in range(numCols):
