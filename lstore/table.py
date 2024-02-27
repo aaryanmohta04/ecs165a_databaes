@@ -80,7 +80,7 @@ class Table:
     def find_record(self,key,  rid, projected_columns_index):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
-        self.page_directory[rid] = rid
+        rid = self.page_directory[rid]
         record = []
         if(rid[3] == 'b'):
             for i in range(len(projected_columns_index)):
@@ -97,6 +97,17 @@ class Table:
         retval = Record(key, rid, record)
         return retval 
         pass
+    def find_tail_rec_for_merge(self, rid):
+        record = []
+       
+        for i in range(len(self.num_columns)):
+                    bytearray = self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data                        
+                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
+                    record.append(value) 
+        return record
+
+
+
     
     def get_key(self, RID):
         #return self.pageRange[RID[0]].basePages[RID[1]].pages[0] + 8*RID[3]
@@ -122,12 +133,62 @@ class Table:
         key = columns[0]
         self.index.add_node(key,RID)
     
-    def __merge(self, PageRangeNumber):
+    def __merge(self, PageRangeIndex):
         # function called on a page range when a certain limit is reached
         # assume that where this function is called, we already have implemented a diffferent thread for merging, and the pagerange ID to be merged is passed as an integer. 
-        PageRange = self.pageRange[PageRangeNumber] # get page range from self object. This should later be changed to pulling data from the file on a disk
+        PageRange = self.pageRange[PageRangeIndex] # get page range from self object. This should later be changed to pulling data from the file on a disk
+        current_tail_page = len(PageRange.tailPages) - 1
+        current_tail_record = len(PageRange.tailPages[current_tail_page].rid) - 1
+        oldTPS = PageRange.TPS 
+        newTPS = [current_tail_page, current_tail_record]
+        def greaterthan(a, b):
+            if(a[0] > b[0]):
+                return True
+            elif(a[0] == b[0]):
+                if(a[1] > b[1]):
+                    return True
+            return False
+            
+        newBasePages = PageRange.basePages #if not copy metadata then what do
+        bitSignal =  np.array(0, 8192)
+        while(current_tail_record >= 0 and current_tail_page >= 0 and greaterthan([current_tail_page, current_tail_record ] , oldTPS) ):
+            baseRID = self.pageRange[PageRangeIndex].tailPages[current_tail_page].baseRID[current_tail_record]; # implement baseRID everywhere
+            baseRID = self.page_directory[baseRID]
+            newPhysicalLocation = [baseRID[0], baseRID[1] + 16, baseRID[2], baseRID[3]] # loop through page directory later to implement this
+            if(bitSignal[(baseRID[1] % 16) * 512 + (baseRID[2])] == 0):
+                bitSignal[(baseRID[1] % 16) * 512 + (baseRID[2])] = 1
+                updatedvalues = self.find_tail_rec_for_merge([PageRangeIndex, current_tail_page,current_tail_record, 't' ])
+                for i in range(len(self.num_columns)):
+                    newBasePages[baseRID[1] % 16].pages[i][baseRID[1]: baseRID[1] + 8] = updatedvalues[i].to_bytes(8, byteorder='big')
+                newBasePages[baseRID[1] % 16].indirection[baseRID[1]] = [PageRangeIndex, current_tail_page, current_tail_record, 't']
+            current_tail_record -= 1 
+            if current_tail_record == -1: 
+                current_tail_record = 511
+                current_tail_record =-1
+        
+        for newBasePage in newBasePages: 
+            self.pageRange[PageRangeIndex].basePages.append(newBasePage)
 
-        # 
+
+        # NEXT STEP IS TO UPDATE PAGE DIRECTORY. INDIRECTION COLUMNS FOR THESE UPDATES MADE ABOVE ARE flimsy, and sum, select, update need to be changed to check TPS as well
+              
+
+
+
+            
+            
+
+            
+            
+
+
+        #  # steps to implement: 
+        #     figure out the background thread part
+        #     create a duplicate page range with merged pages. 
+        #     implement TPS for consolidated merged pages. 
+        #     update indirection columns to actually be correct. 
+        #     update the page directory on the main thread. 
+        #     add page range, update current pages?
         print("merge is happening")
 
         pass
