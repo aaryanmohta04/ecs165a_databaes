@@ -38,7 +38,7 @@ class Bufferpool:
         self.frames[frame_index].pin_page()
         self.frames[frame_index].pin_page()
 =======
-        self.frames[frame_index].set_pin()
+        self.frames[frame_index].pin_page()
 
         for i in numColumns:
             #Read in values
@@ -46,7 +46,7 @@ class Bufferpool:
         directory_key = (page_range_index, base_page_index)
         self.frame_directory[directory_key] = frame_index
         
-        self.frames[frame_index].set_pin()
+        self.frames[frame_index].unpin_page()
 >>>>>>> Stashed changes
         
         pass
