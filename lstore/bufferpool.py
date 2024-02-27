@@ -48,26 +48,25 @@ class Bufferpool:
             self.frames.append(Frame(path, numColumns))
         
         self.frames[frame_index].pin_page()
-            
+        bin = open(path, "rb")
         for i in numColumns:
-            #read in values
-            
+            bin.seek(i * 4096)
+            self.frames[frame_index].columns[i] = bytearray(bin.read(4096))
+        bin.close()
+        
         directory_key = (page_range_index, base_page_index)
         self.frame_directory[directory_key] = frame_index
-        
         self.frames[frame_index].unpin_page()
-
-            pass
     
     
-    def write_to_disk(self, frame_index):
+    def write_to_disk(self, frame_index, numColumns):
         frame = self.frames[frame_index]
         columns = frame.columns
         path_to_page = frame.path
         if frame.dirtyBit == True:
             bin = open(path_to_page, "wb")
-            for i in range(len(columns)):
-                # Write base/tail page
+            for i in numColumns:
+                bin.write(columns[i])
             bin.close()
     
     #Write all pages to disk
