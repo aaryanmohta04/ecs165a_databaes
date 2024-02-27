@@ -11,11 +11,13 @@ class Bufferpool:
         self.frames = []
         self.numFrames = 0
         self.path_to_root = path_to_root
+        self.frame_directory = {}
         
     def has_capacity(self):
         if self.numFrames == FRAMECOUNT:
             return True
         return false
+    
     
     #Select LRU(or whatever method), send to disk
     def evict_page(self):
@@ -23,7 +25,7 @@ class Bufferpool:
     
     #Bring page in from disk, if full, evict a page first
     def load_page(self, page_range_index, base_page_index, numColumns):
-        path_to_page = f"{self.path_to_root}/{table_name}/page_range_{page_range_index}/" \
+        path_to_page = f"{self.path_to_root}/page_range_{page_range_index}/" \
                            f"base_page_{base_page_index}.bin"
         if self.has_capacity():
             frame_index = self.evict_page()
@@ -32,17 +34,38 @@ class Bufferpool:
             frame_index = self.numFrames
             self.frames.append(Frame(path, numColumns))
         
+<<<<<<< Updated upstream
         self.frames[frame_index].pin_page()
         self.frames[frame_index].pin_page()
-        
-        #Read in values
+=======
+        self.frames[frame_index].set_pin()
+
         for i in numColumns:
-            
+            #Read in values
+        
+        directory_key = (page_range_index, base_page_index)
+        self.frame_directory[directory_key] = frame_index
+        
+        self.frames[frame_index].set_pin()
+>>>>>>> Stashed changes
+        
         pass
     
+    def write_to_disk(self, frame_index):
+        frame = self.frames[frame_index]
+        columns = frame.columns
+        path_to_page = frame.path
+        if frame.dirtyBit == True:
+            bin = open(path_to_page, "wb")
+            for i in range(len(columns)):
+                # Write base/tail page
+            bin.close()
     
     #Write all pages to disk
     def close(self):
+        for i in range(len(self.frames)):
+            if self.frames[i].dirtyBit == True:
+                self.write_to_disk(i)
         pass
     
 class Frame:
