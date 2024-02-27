@@ -43,6 +43,13 @@ class Page:
     def get_value(self, index):
         val = int.from_bytes(self.data[index*8:(index + 1)*8], 'big')
         return val
+        
+    def read_from_disk(self, path, col):
+        file = open(path, "rb")
+        file.seek(col * 4096) #go to specific field
+        self.data = bytearray(file.read(4096))
+        file.close()
+    
 
 #One Base_Page Contains many pages/columns (16 BPs in Page Range)
 #Technically Tail Pages also create 4k columnar pages (could this class be used for both?)
@@ -79,6 +86,12 @@ class BasePage:
         self.start_time.append(start_time)
         self.schema_encoding.append(schema_encoding)
         self.indirection.append(indirection)
+
+    def write_to_disk(self, path, frameData):
+        file = open(path, "wb")
+        for i in range(len(frameData)):
+            file.write(frameData[i].data)
+        file.close()
         
 class TailPage:
     def __init__(self, numCols):
