@@ -145,7 +145,7 @@ class PageRange:
                         for cols in range(len(schema_encoding)):
                             if schema_encoding[cols] == '1':
                                 writeInValue = tailPage.pages[cols].get_value(records)
-                                basePage.pages[cols].data[basePageRecord * 8 :(basePageRecord + 1) * 8] = int(writeInValue).to_bytes(8, byteorder = 'big') # Updating
+                                basePage.pages[cols].data[basePageRecord * 8 :(basePageRecord + 1) * 8] = int(writeInValue).to_bytes(8, byteorder = 'big')
             break
 
         self.tailPages = []
