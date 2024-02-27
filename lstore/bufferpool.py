@@ -26,8 +26,9 @@ class Bufferpool:
         evict_index = 0
         for i in (len(self.frames) - 1):
             if self.frames[i] > self.frames[i + 1]:
-                page_to_evict = self.frames[i + 1]
-                evict_index = i + 1
+                 if self.frames[i + 1].isPinned() == FALSE:
+                    page_to_evict = self.frames[i + 1]
+                    evict_index = i + 1
 
         if(page_to_evict.dirtyBit == TRUE):
             #write contents of page to disk
