@@ -2,6 +2,7 @@ from lstore.index import Index
 #from lstore.index import Page #added Page because pdf says Table uses Page internally
 from time import time
 from lstore.page import PageRange
+from lstore.bufferpool import *
 import numpy as np
 
 INDIRECTION_COLUMN = 0
@@ -25,12 +26,14 @@ class Table:
     :param num_columns: int     #Number of Columns: all columns are integer
     :param key: int             #Index of table key in columns
     """
-    def __init__(self, name, num_columns, key):
+    def __init__(self, name, num_columns, key, bufferpool):
         self.name = name
         self.key = key
         self.num_columns = num_columns
         self.page_directory = {}
         self.index = Index(self)
+        self.bufferpool = bufferpool
+        self.num_pageRanges
 
         #array for the page ranges
         self.pageRange = []
@@ -50,6 +53,9 @@ class Table:
 
         self.pageRange.append(page_range) #adding new page range to page range array
         self.curPageRange = len(self.pageRange) - 1 #update current page range
+
+        self.num_pageRanges += 1 #keep track of page range index
+        self.bufferpool.allocate_page_range(self.num_pageRanges, ) #when adding page range, need to allocate space in disk
         
     def get_page_range(self):
         if self.pageRange[self.curPageRange].has_capacity():
