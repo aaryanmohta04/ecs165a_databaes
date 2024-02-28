@@ -1,5 +1,5 @@
 from lstore.index import Index
-from lstore.index import Page #added Page because pdf says Table uses Page internally
+from lstore.page import Page #added Page because pdf says Table uses Page internally
 from time import time
 from lstore.page import PageRange
 from lstore.bufferpool import *
@@ -49,7 +49,7 @@ class Table:
         self.curPageRange = len(self.pageRange) - 1 #update current page range
 
         self.num_pageRanges += 1 #keep track of page range index
-        self.bufferpool.allocate_page_range(self.num_pageRanges, ) #when adding page range, need to allocate space in disk
+        self.bufferpool.allocate_page_range(self.num_pageRanges, self.curPageRange) #when adding page range, need to allocate space in disk
         
     def get_page_range(self):
         if self.pageRange[self.curPageRange].has_capacity():

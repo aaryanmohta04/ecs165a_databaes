@@ -1,6 +1,6 @@
 from asyncio.windows_events import NULL
 from pickle import FALSE, TRUE
-from lstore.table import Table
+# from lstore.table import Table
 from lstore.page import Page
 from datetime import datetime
 import os
@@ -119,16 +119,16 @@ class Bufferpool:
         pass
     
     
-    write_to_disk(self, frame_index):
-        frame = self.frames[frame_index]
-        columns = frame.columns
-        path_to_page = frame.path
-        if frame.dirtyBit == True:
-            bin = open(path_to_page, "wb")
-            for i in range(len(columns)):
-                # Write base/tail page
-                pass
-            bin.close()
+    # def write_to_disk(self, frame_index):
+    #     frame = self.frames[frame_index]
+    #     columns = frame.columns
+    #     path_to_page = frame.path
+    #     if frame.dirtyBit == True:
+    #         bin = open(path_to_page, "wb")
+    #         for i in range(len(columns)):
+    #             # Write base/tail page
+    #             pass
+    #         bin.close()
     
     #Write all pages to disk
     def close(self):

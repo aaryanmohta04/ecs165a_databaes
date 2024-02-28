@@ -17,7 +17,7 @@ class Database():
     # Not required for milestone1
     def open(self, path):
         self.bufferpool = Bufferpool(path) #create a bufferpool object for this db
-        self.bufferpool.start_dir() #initiate directory given the path (or check if it exists)
+        self.bufferpool.start_db_dir() #initiate directory given the path (or check if it exists)
         self.path = path
         tables_path = path + '/tables/tables.csv'
         
@@ -69,8 +69,9 @@ class Database():
     :param key: int             #Index of table key in columns
     """
     def create_table(self, name, num_columns, key_index):
+       
         self.bufferpool.start_table_dir(name, num_columns) #makes table directory
-        self.bufferpool.allocate_page_range(self, num_columns, 0)
+        self.bufferpool.allocate_page_range( num_columns, 0)
         table = Table(name, num_columns, key_index, self.bufferpool)
         if not os.path.exists(self.path + f"/tables/{table.name}"):
             os.mkdir(self.path + f"/tables/{table.name}")
