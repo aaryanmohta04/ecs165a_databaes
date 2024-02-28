@@ -34,11 +34,13 @@ class Database():
                 os.mkdir(path)
                 os.mkdir(path + "/tables")
         
-        # create indices for all columns. 
+        # create indices, page directories for all columns. 
         for table in self.tables:
             if os.path.exists(path + f"/{table.name}/indices.pkl"):
                 table.index.load_index(table.name)
-    
+            if os.path.exists(path + f"/{table.name}/pagedirectory.pkl"):
+                with open(f"ECS165A/tables/{tablename}/pagedirectory.pkl", 'rb') as file:
+                    self.table.page_directory = pickle.load(file)
             
 
         pass
@@ -54,6 +56,10 @@ class Database():
             for table in self.tables:
                 picklepath = self.path + f"/tables/{table.name}/indices.pkl"
                 table.index.close_and_save(picklepath)
+                directorypath = self.path + f"/tables/{table.name}/pagedirectory.pkl"
+                with open(directorypath, 'wb') as file:
+                    pickle.dump(self.table.page_directory, file)
+
         pass
 
     """
