@@ -49,9 +49,12 @@ class Bufferpool:
 
             bp_file.close()
 
+        tail_page_path = f"{page_range_path}/tailPages"
+        os.mkdir(tail_page_path)
+
     def allocate_tail_page(self, numCols, pageRangeIndex, numTPs):
 
-        tp_file_location = f"{self.current_table_path}/pageRange{pageRangeIndex}/tailPage{numTPs}.bin"
+        tp_file_location = f"{self.current_table_path}/pageRange{pageRangeIndex}/tailPages/tailPage{numTPs}.bin"
         tp_file = open(tp_file_location, "wb")
 
         for i in range(numCols + 4): #number of cols + rid, indirection, schema, base rid
