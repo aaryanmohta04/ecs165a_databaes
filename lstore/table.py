@@ -31,11 +31,7 @@ class Table:
         self.index = Index(self)
         self.bufferpool = bufferpool
         self.num_pageRanges = 0 # can be implemented using length
-
-        #array for the page ranges
         self.pageRange = []
-        
-        #want to keep track of current page range, current BP, current record
         self.curPageRange = 0
         self.curBP = 0
         self.curRecord = 0
@@ -49,6 +45,7 @@ class Table:
         page_range = PageRange(numCols) 
 
         self.pageRange.append(page_range) #adding new page range to page range array
+        
         self.curPageRange = len(self.pageRange) - 1 #update current page range
 
         self.num_pageRanges += 1 #keep track of page range index

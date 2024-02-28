@@ -9,9 +9,9 @@ class Index:
         # One index for each column. All are empty initially.
         self.indices = [None] *  table.num_columns
         pass
-    def load_index(self, tablename): 
+    def load_index(self, picklepath): 
 
-        with open(f"ECS165A/tables/{tablename}/indices.pkl", 'rb') as file:
+        with open(picklepath, 'rb') as file:
             self.indices = pickle.load(file)
 
     

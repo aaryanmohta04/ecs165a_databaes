@@ -36,15 +36,15 @@ class Database():
         
         # create indices, page directories for all columns. 
         for table in self.tables:
-            if os.path.exists(path + f"/{table.name}/indices.pkl"):
-                table.index.load_index(table.name)
-            if os.path.exists(path + f"/{table.name}/pagedirectory.pkl"):
-                with open(f"ECS165A/tables/{tablename}/pagedirectory.pkl", 'rb') as file:
+            if os.path.exists(path + f"/tables/{table.name}/indices.pkl"):
+                table.index.load_index(path + f"/tables/{table.name}/indices.pkl")
+            if os.path.exists(path + f"/tables/{table.name}/pagedirectory.pkl"):
+                with open(path + f"/tables/{table.name}/pagedirectory.pkl", 'rb') as file:
                     self.table.page_directory = pickle.load(file)
             
 
         pass
-
+    
     def close(self):
         tables_path = self.path + '/tables/tables.csv'
         with open(tables_path, 'w', newline='') as file:
