@@ -1,14 +1,19 @@
 """
 A data strucutre holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
 """
-
+import pickle
 from BTrees._OOBTree import OOBTree
 class Index:
 
     def __init__(self, table):
-        # One index for each table. All are empty initially.
+        # One index for each column. All are empty initially.
         self.indices = [None] *  table.num_columns
         pass
+    def load_index(self, tablename): 
+
+        with open(f"ECS165A/tables/{tablename}/indices.pkl", 'rb') as file:
+            self.indices = pickle.load(file)
+
     
     def get_index(self, column_number):
         return self.indices[column_number]
@@ -62,5 +67,7 @@ class Index:
         for key in columns:
             self.add_node(key, rid)
 
-                      
+    def close_and_save(self,picklepath): 
+         with open(picklepath, 'wb') as file:
+            pickle.dump(self.indices, file) 
             
