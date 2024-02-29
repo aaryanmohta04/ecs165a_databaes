@@ -52,9 +52,7 @@ class Table:
                 specifictablepath = os.path.join(path, entry)
                 if os.path.isdir(specifictablepath):
                     self.pageRangePaths.append(specifictablepath)
-                    pagerange = PageRange(self.num_columns)
-                    pagerange.countpages(specifictablepath)
-                    self.num_pageRanges += 1  
+                    self.num_pageRanges += 1   
     #added numCols to arguments because creating a PageRange requires numCols argument
     #added numCols to arguments because creating a PageRange requires numCols argument
     def add_page_range(self, numCols):
@@ -90,7 +88,7 @@ class Table:
             file.write(binary_data)
         pass
 
-  def updateCurBP(self):
+    def updateCurBP(self):
         #self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
         self.curBP += 1
         if self.curBP == -1:
@@ -109,34 +107,31 @@ class Table:
         #self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
     
-    def find_record(self,key,  rid, projected_columns_index, TPS):
+    def find_record(self,key,  rid, projected_columns_index):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
-        rid = self.page_directory[rid]  
+        rid = self.page_directory[rid]
         if(rid[3]== 't'):
-            self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns)
-            key_directory = (rid[0], rid[1], 't')
-            if self.greaterthan(TPS, [rid[1], rid[2]]):     
-                rid = self.bufferpool.extractBaseRID(key_directory, self.table.num_columns, rid[2])
-                self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
-                key_directory = (rid[0], rid[1], 'b')
-                data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
-            else:
-                data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
+            if self.greaterthan(self.pageRange[rid[0]].TPS, [rid[1], rid[2]]):
+                rid = self.pageRange[rid[0]].tailPages[rid[1]].BaseRID
+                rid = self.page_directory[rid]
 
         record = []
         if(rid[3] == 'b'):
-            self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
-            key_directory = (rid[0], rid[1], 'b')
-            data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
-            
-        for i in range(len(projected_columns_index)):
-            if (projected_columns_index[i] == 1):
-                record.append(data[i])
-
+            for i in range(len(projected_columns_index)):
+                if (projected_columns_index[i] == 1):
+                    bytearray = self.pageRange[rid[0]].basePages[rid[1]].pages[i].data
+                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
+                    record.append(value)
+        else:
+           for i in range(len(projected_columns_index)):
+                if (projected_columns_index[i] == 1):
+                    bytearray = self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data
+                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
+                    record.append(value) 
         retval = Record(key, rid, record)
         return retval 
-    
+        pass
     def find_tail_rec_for_merge(self, rid):
         record = []
        
@@ -145,7 +140,6 @@ class Table:
                     value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
                     record.append(value) 
         return record
-
 
     def curBP_has_Capacity(self, curBP):
         if self.bufferpool.frames[curBP].numRecords < 512:
@@ -159,7 +153,6 @@ class Table:
         else:
             return FALSE
 
-
     
     def get_key(self, RID):
         #return self.pageRange[RID[0]].basePages[RID[1]].pages[0] + 8*RID[3]
@@ -167,12 +160,12 @@ class Table:
     
     def insertRec(self, start_time, schema_encoding, *columns):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
-        self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
+        self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
 
         if self.curBP_has_Capacity(self.curBP) == FALSE:
             if self.curPR_has_Capacity(self.curPageRange):
                 self.curBP += 1
-                self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
+                self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
                 self.updateCurRecord()
             else:
                 self.curPageRange += 1
@@ -207,6 +200,8 @@ class Table:
         # key = columns[0]
         # self.index.add_node(key,RID)
 
+    def updateRec(self):
+        pass
 
     
     def __merge(self, PageRangeIndex):
