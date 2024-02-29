@@ -44,17 +44,23 @@ class Page:
     def get_value(self, index):
         val = int.from_bytes(self.data[index*8:(index + 1)*8], 'big')
         return val
-        
+
     def read_from_disk(self, path, col):
         file = open(path, "rb")
         file.seek(col * 4096) #go to specific field
         self.data = bytearray(file.read(4096))
         file.close()
-
-    def write_to_disk(self, path, frameData):
+        
+   def write_to_disk(self, path, data, col):
         file = open(path, "wb")
-        for i in range(len(frameData)):
-            file.write(frameData[i].data)
+        file.seek(col * 4096) #go to specific field
+        file.write(data)
+        file.close()
+
+    def write_to_disk_record(self, path, data, col, row):
+        file = open(path, "wb")
+        file.seek(col * 4096 + row * 8) #go to specific field and record
+        file.write(data)
         file.close()
     
 
