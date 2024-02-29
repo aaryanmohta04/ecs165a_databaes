@@ -39,7 +39,7 @@ class Bufferpool:
             os.mkdir(path)
         self.current_table_path = path
 
-    def allocate_page_range(self, numCols, pageRangeIndex): #allocates enough space for 16 BPs in new page range
+     def allocate_page_range(self, numCols, pageRangeIndex): #allocates enough space for 16 BPs in new page range
         page_range_path = f"{self.current_table_path}/pageRange{pageRangeIndex}"
         os.mkdir(page_range_path)
 
@@ -47,13 +47,14 @@ class Bufferpool:
             bp_file_location = f"{page_range_path}/basePage{i}.bin"
             bp_file = open(bp_file_location, "wb")
 
-            for j in range(numCols + 12): #number of columns + rid(4), indirection, time, schema (need base rid column too?), metadata: TPS, numRecords (one page with metadata single elements)
+            for j in range(numCols + 11): #number of columns + rid(4), indirection, time, schema (need base rid column too?), metadata: TPS, numRecords (one page with metadata single elements)
                 bp_file.write(bytearray(4096))
 
             bp_file.close()
 
         tail_page_path = f"{page_range_path}/tailPages"
         os.mkdir(tail_page_path)
+
 
     def allocate_tail_page(self, numCols, pageRangeIndex, numTPs):
 
@@ -102,18 +103,21 @@ class Bufferpool:
         path_to_page = f"{self.path_to_root}/pageRange{page_range_index}/" \
                            f"basePage{base_page_index}.bin"
         self.current_total_path = path_to_page
-        if not self.has_capacity():
-            frame_index = self.evict_page()
-            d_key_remove = self.frame_info[frame_index] #to remove the old info from frame_directory (frame_info will just be overwritten)
-            self.frame_directory.remove(d_key_remove)
-            self.frames[frame_index] = Frame(path_to_page, numColumns)
-        else:
-            frame_index = self.numFrames
-            self.frames.append(Frame(path_to_page, numColumns))
+        d_key = (page_range_index, base_page_index, 'b')
+        if not self.in_pool(d_key):
+            if not self.has_capacity():
+                frame_index = self.evict_page()
+                d_key_remove = self.frame_info[frame_index] #to remove the old info from frame_directory (frame_info will just be overwritten)
+                self.frame_directory.remove(d_key_remove)
+                self.frames[frame_index] = Frame(path_to_page, numColumns)
+            else:
+                frame_index = self.numFrames
+                self.frames.append(Frame(path_to_page, numColumns))
         
         self.frames[frame_index].pin_page()
             
-        for i in range(numColumns + 8):
+        for i in range(numColumns):
+            self.frames[frame_index].frameData.append(Page())
             self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
         directory_key = (page_range_index, base_page_index, 'b')
@@ -125,23 +129,26 @@ class Bufferpool:
 
         pass
 
-    def load_tail_page(self, page_range_index, tail_page_index, numColumns, table_name):
+   def load_tail_page(self, page_range_index, tail_page_index, numColumns, table_name):
         path_to_page = f"{self.path_to_root}/pageRange{page_range_index}/" \
                            f"tailPages/tailPage{tail_page_index}.bin"
         self.current_table_path = path_to_page
-        if not self.has_capacity():
-            frame_index = self.evict_page()
-            d_key_remove = self.frame_info[frame_index]
-            self.frame_directory.remove(d_key_remove)
-            self.frames[frame_index] = Frame(path_to_page, numColumns)
-        else:
-            frame_index = self.numFrames
-            self.frames.append(Frame(path_to_page, numColumns))
+        d_key = (page_range_index, tail_page_index, 't')
+        if not self.in_pool(d_key):
+            if not self.has_capacity():
+                frame_index = self.evict_page()
+                d_key_remove = self.frame_info[frame_index]
+                self.frame_directory.remove(d_key_remove)
+                self.frames[frame_index] = Frame(path_to_page, numColumns)
+            else:
+                frame_index = self.numFrames
+                self.frames.append(Frame(path_to_page, numColumns))
         
 
         self.frames[frame_index].pin_page()
             
-        for i in range(numColumns + 8):
+        for i in range(numColumns):
+            self.frames[frame_index].frameData.append(Page())
             self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
         directory_key = (page_range_index, tail_page_index, 't')
@@ -168,23 +175,85 @@ class Bufferpool:
     #         bin.close()
     
     #Write all pages to disk
+    def write_rid(self, path, numCols, curIndex): #curIndex refers to current BP index
+        for i in range(4):
+            tempPage = Page()
+            for j in range(self.frames[curIndex].numRecords):
+                tempPage.write(self.frames.rid[j][i])
+            
+            tempPage.write_to_disk(path, tempPage.data, numCols + i)
+            
+
+    def write_indirection(self, path, numCols, curIndex):
+        for i in range(4):
+            tempPage = Page()
+            for j in range(self.frames[curIndex].numRecords):
+                tempPage.write(self.frames.indirection[j][i])
+            
+            tempPage.write_to_disk(path, tempPage.data, numCols + i)
+
+    def write_baseRid(self, path, numCols, curIndex):
+        for i in range(4):
+            tempPage = Page()
+            for j in range(self.frames[curIndex].numRecords):
+                tempPage.write(self.frames.BaseRID[j][i])
+            
+            tempPage.write_to_disk(path, tempPage.data, numCols + i)
+
+    def write_start_time(self, path, numCols, curIndex):
+        tempPage = Page()
+        for j in range(self.frames.curIndex.numRecords):
+            tempPage.write(self.frames.start_time[j])
+
+        tempPage.write_to_disk(path, tempPage.data, numCols)
+
+    def write_schema_encoding(self, path, numCols, curIndex):
+        tempPage = Page()
+        for j in range(self.frames.curIndex.numRecords):
+            tempPage.write(int)(self.frames.schema_encoding[j])
+
+        tempPage.write_to_disk(path, tempPage.data, numCols)
+
+    def write_TPS(self, path, numCols, curIndex):
+        for i in range(2):
+            tempPage = Page()
+            tempPage.write(self.frames.TPS[i])
+            tempPage.write_to_disk_record(path, tempPage.data, numCols, i)
+
+    def write_numRecords(self, path, numCols, curIndex, row):
+        tempPage = Page()
+        tempPage.write(self.frames.numRecords)
+        tempPage.write_to_disk_record(path, tempPage.data, numCols, row)
+
     def close(self):
         for i in range(len(self.frames)):
             if self.frames[i].dirtyBit == True:
                 if self.frame_info[i][2] == 'b':
-                    path = f"{self.path_to_root}/pageRange{self.frame_directory[i][0]}/basePage{self.frame_directory[i][1]}.bin"
-                    self.frames[i].write_to_disk(path, self.frames[i].frameData)
+                    path = f"{self.path_to_root}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin"
+                    for j in range(len(self.frames[i].frameData)):
+                        self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
+                    self.write_rid(path, len(self.frames[i].frameData), i)
+                    self.write_indirection(path, len(self.frames[i].frameData) + 4, i)
+                    self.write_start_time(path, len(self.frames[i].frameData) + 8, i)
+                    self.write_schema_encoding(path. len(self.frames[i].frameData) + 9, i)
+                    self.write_TPS(path, len(self.frames[i].frameData) + 10, i)
+                    self.write_numRecords(path, len(self.frames[i].frameData) + 10, i, 2)
 
-                    
                 elif self.frame_info[i][2] == 't':
-                    path = f"{self.path_to_root}/pageRange{self.frame_directory[i][0]}/tailPage{self.frame_directory[i][1]}.bin"
-                    self.frames[i].write_to_disk(path, self.frames[i].frameData)
+                    path = f"{self.path_to_root}/pageRange{self.frame_info[i][0]}/tailPages/tailPage{self.frame_info[i][1]}.bin"
+                    for j in range(len(self.frames[i].frameData)):
+                        self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
+                    self.write_rid(path, len(self.frames[i].frameData), i)
+                    self.write_indirection(path, len(self.frames[i].frameData) + 4, i)
+                    self.write_baseRid(path, len(self.frames[i].frameData) + 8, i)
+                    self.write_schema_encoding(path, len(self.frames[i].frameData) + 12, i)
+                    self.write_numRecords(path, len(self.frames[i].frameData) + 13, i, 0)
         pass
-        
+
 class Frame:
 
     def __init__(self, path, numColumns):
-        self.frameData = [] #like pages[]
+        self.frameData = [] * numColumns #like pages[]
         self.TPS = 0
         self.numRecords = 0
         self.rid = [None] * 512
@@ -197,6 +266,7 @@ class Frame:
         self.path = path
         self.columns = [None] * numColumns
         self.lastAccess = 0
+        self.numColumns = numColumns
         
     def set_dirty_bit(self):
         if dirtyBit == True:
