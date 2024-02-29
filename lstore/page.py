@@ -49,6 +49,12 @@ class Page:
         file.seek(col * 4096) #go to specific field
         self.data = bytearray(file.read(4096))
         file.close()
+
+    def write_to_disk(self, path, frameData):
+        file = open(path, "wb")
+        for i in range(len(frameData)):
+            file.write(frameData[i].data)
+        file.close()
     
 
 #One Base_Page Contains many pages/columns (16 BPs in Page Range)
@@ -87,11 +93,6 @@ class BasePage:
         self.schema_encoding.append(schema_encoding)
         self.indirection.append(indirection)
 
-    def write_to_disk(self, path, frameData):
-        file = open(path, "wb")
-        for i in range(len(frameData)):
-            file.write(frameData[i].data)
-        file.close()
         
 class TailPage:
     def __init__(self, numCols):
@@ -123,7 +124,7 @@ class TailPage:
 
         self.schema_encoding.append(schema) #puts the schema encoding in
         self.num_records += 1
-
+        
 #Should have 16 BPs each BP with 4k Pages and each BP can have 4k records (1 record is a value from each page in BP)
 #numCols gets sent to BasePage where it will determine number of Pages per Base Page
 class PageRange:
