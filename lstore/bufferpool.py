@@ -204,7 +204,7 @@ class Bufferpool:
             newrid.append(x)
         return newrid
     
-    def extractRID(self,key_directory, num_columns, recordnumber): 
+    def extractBaseRID(self,key_directory, num_columns, recordnumber): 
             newrid = []
             for i in range(3):
                 frame_index = self.frame_directory[key_directory]

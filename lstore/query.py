@@ -67,10 +67,14 @@ class Query:
         records = []
         rid = self.table.page_directory[rid]
         self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+        newrid = []
         key_directory = (rid[0], rid[1], 'b')
-        newrid = self.table.bufferpool.extractindirection(key_directory, self.table.num_columns, rid[2])
-        TPS = self.table.bufferpool.extractTPS(key_directory, self.table.num_columns)
+        for i in range(3):
+            frame_index = self.table.bufferpool.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
+            newrid.append(x)
         rid = newrid
+        TPS = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
         record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
         records.append(record)
         return records
@@ -173,15 +177,22 @@ class Query:
         sum = 0
         for rid in rids:
             rid = self.table.page_directory[rid]
-            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-            rid = self.table.page_directory[rid]
+            self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+            key_directory = (rid[0], rid[1], 'b')
+            indirectrid = self.table.bufferpool.extractindirection(key_directory, self.table.num_columns, rid[2])
+            if indirectrid[3] == 't':
+                if(self.table.greaterthan(self.table.bufferpool.extractTPS(key_directory, self.table.num_columns), [indirectrid[1], indirectrid[2]])):
+                    data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2])
+                else:
+                    self.table.bufferpool.load_tail_page(indirectrid[0], indirectrid[1], self.table.num_columns)
+                    key_directory = (indirectrid[0], indirectrid[1], 't')
+                    data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, indirectrid[2])
+                
             if(rid[3] == 'b'):
-                column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
-            else:
-                column = self.table.pageRange[rid[0]].tailPages[rid[1]].pages[aggregate_column_index].data
-            sum += (int.from_bytes(column[rid[2]*8:rid[2]*8 + 8], byteorder = 'big'))
+                data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2]) 
+            sum += data[aggregate_column_index]
+            
         return sum
-        pass
 
     
     """
