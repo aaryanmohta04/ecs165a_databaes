@@ -3,6 +3,7 @@ from lstore.page import Page #added Page because pdf says Table uses Page intern
 from time import time
 from lstore.page import PageRange
 from lstore.bufferpool import *
+import os
 import numpy as np
 import array
 import struct
@@ -176,6 +177,9 @@ class Table:
         oldTPS = PageRange.TPS 
         newTPS = [current_tail_page, current_tail_record]
 
+    def write_record_to_disk(self): #will add attributes as we go
+        pass
+
     def greaterthan(self, a, b):
         if(a[0] > b[0]):
             return True
@@ -228,4 +232,3 @@ class Table:
         print("merge is happening")
 
         pass
- 
