@@ -32,7 +32,8 @@ class Bufferpool:
         pass
 
     def start_table_dir(self, name, numCols): #makes directory for table within db directory
-        path = os.path.join(self.path_to_root, name)
+        path = self.path_to_root + f"/tables/"
+        path = os.path.join(path, name)
         os.mkdir(path)
         self.current_table_path = path
 
