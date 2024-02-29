@@ -90,8 +90,9 @@ class Table:
             file.write(binary_data)
         pass
 
-    def updateCurBP(self):
-        self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
+  def updateCurBP(self):
+        #self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
+        self.curBP += 1
         if self.curBP == -1:
             self.curBP = 0 #in case that numbasepages is 0 and becomes -1
     
@@ -100,12 +101,12 @@ class Table:
         return self.pageRange[self.curPageRange].basePages[self.curBP]
 
     def updateCurRecord(self):
-        self.curRecord = self.pageRange[self.curPageRange].basePages[self.curBP].num_records 
+        self.curRecord = self.bufferpool.frames[self.curBP].numRecords
 
     def createBP_RID(self):
        
         tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b') 
-        self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
+        #self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
     
     def find_record(self,key,  rid, projected_columns_index, TPS):
@@ -146,6 +147,18 @@ class Table:
         return record
 
 
+    def curBP_has_Capacity(self, curBP):
+        if self.bufferpool.frames[curBP].numRecords < 512:
+            return TRUE
+        else:
+            return FALSE
+
+    def curPR_has_Capacity(self, curPageRange):
+        if self.bufferpool.frames[15].numRecords < 512:
+            return TRUE
+        else:
+            return FALSE
+
 
     
     def get_key(self, RID):
@@ -153,24 +166,48 @@ class Table:
         return self.pageRange[RID[0]].basePages[RID[1]].pages[0].data[8*RID[2]]
     
     def insertRec(self, start_time, schema_encoding, *columns):
-        if self.getCurBP().has_capacity() == False:                #checks if current BP is full
-            if self.pageRange[self.curPageRange].has_capacity():  #checks if current page range is full
-                 self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
-                 self.updateCurBP()
-                 self.updateCurRecord()                             #updates current BP to new BP
-            else: #if is
-                 self.add_page_range(self.num_columns)          #add a new page range
-                 self.updateCurBP()                             #adding a new page range should have set the current page range 
-                 self.updateCurRecord()
-                                                                # to the new one and added a new base page to it
-                                                                      
-        RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
+        # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
+        self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
+
+        if self.curBP_has_Capacity(self.curBP) == FALSE:
+            if self.curPR_has_Capacity(self.curPageRange):
+                self.curBP += 1
+                self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
+                self.updateCurRecord()
+            else:
+                self.curPageRange += 1
+                self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange)
+                self.curBP = 0
+                self.updateCurRecord()
+
+        RID = self.createBP_RID()
         self.page_directory[RID] = RID
-        indirection = RID                                       #add RID to indirection column since this is insert, not update
-        self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecords
-        self.updateCurRecord()                                  #update record index for current BP
+        indirection = RID
+        self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, self.num_columns)
+        self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
         key = columns[0]
         self.index.add_node(key,RID)
+
+        
+        #     if self.pageRange[self.curPageRange].has_capacity():  #checks if current page range is full
+        #          self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
+        #          self.updateCurBP()
+        #          self.updateCurRecord()                             #updates current BP to new BP
+        #     else: #if is
+        #          self.add_page_range(self.num_columns)          #add a new page range
+        #          self.updateCurBP()                             #adding a new page range should have set the current page range 
+        #          self.updateCurRecord()
+        #                                                         # to the new one and added a new base page to it
+                                                                      
+        # RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
+        # self.page_directory[RID] = RID
+        # indirection = RID                                       #add RID to indirection column since this is insert, not update
+        # self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecords
+        # self.updateCurRecord()                                  #update record index for current BP
+        # key = columns[0]
+        # self.index.add_node(key,RID)
+
+
     
     def __merge(self, PageRangeIndex):
         # function called on a page range when a certain limit is reached
