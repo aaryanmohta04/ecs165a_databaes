@@ -1,6 +1,5 @@
 from asyncio.windows_events import NULL
 from pickle import FALSE, TRUE
-from lstore import page
 # from lstore.table import Table
 from lstore.page import Page
 from datetime import datetime
@@ -39,7 +38,7 @@ class Bufferpool:
             os.mkdir(path)
         self.current_table_path = path
 
-     def allocate_page_range(self, numCols, pageRangeIndex): #allocates enough space for 16 BPs in new page range
+    def allocate_page_range(self, numCols, pageRangeIndex): #allocates enough space for 16 BPs in new page range
         page_range_path = f"{self.current_table_path}/pageRange{pageRangeIndex}"
         os.mkdir(page_range_path)
 
@@ -54,7 +53,6 @@ class Bufferpool:
 
         tail_page_path = f"{page_range_path}/tailPages"
         os.mkdir(tail_page_path)
-
 
     def allocate_tail_page(self, numCols, pageRangeIndex, numTPs):
 
@@ -72,8 +70,45 @@ class Bufferpool:
         if os.path.isdir(path):
             self.current_table_path = path
 
+    def extractRID(self, key_directory, num_columns, recordnumber): 
+        newrid = []
+        for i in range(3):
+            frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i][recordnumber*8:(recordnumber + 1)*8], 'big')
+            newrid.append(x)
+        return newrid
     
+    def extractIndirection(self, key_directory, num_columns, recordnumber): 
+        newrid = []
+        for i in range(3):
+            frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 4][recordnumber*8:(recordnumber + 1)*8], 'big')
+            newrid.append(x)
+        return newrid
+    
+    def extractBaseRID(self,key_directory, num_columns, recordnumber): 
+        newrid = []
+        for i in range(3):
+            frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 8][recordnumber*8:(recordnumber + 1)*8], 'big')
+            newrid.append(x)
+        return newrid
+
+    def extractTPS(self, key_directory, num_columns):
+        frame_index = self.frame_directory[key_directory]
+        x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][0:8], 'big')
+        y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][8:16], 'big')
+        return [x,y]
+    
+    def extractRecordCount(self, key_directory, num_columns):
+        frame_index = self.frame_directory[key_directory]
+        if key_directory[2] == 'b':
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][16:24], 'big')
+        elif key_directory[2] == 't':
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 13][0:8], 'big')
         
+        return x
+    
 #use frame directory
     def in_pool(self, rid):
         check_rid_directory_key = (rid[0], rid[1], rid[3])
@@ -124,12 +159,14 @@ class Bufferpool:
         self.frame_directory[directory_key] = frame_index
 
         self.frame_info[frame_index] = directory_key
+
+
         
         self.frames[frame_index].unpin_page()
 
         pass
 
-   def load_tail_page(self, page_range_index, tail_page_index, numColumns, table_name):
+    def load_tail_page(self, page_range_index, tail_page_index, numColumns, table_name):
         path_to_page = f"{self.path_to_root}/pageRange{page_range_index}/" \
                            f"tailPages/tailPage{tail_page_index}.bin"
         self.current_table_path = path_to_page
@@ -183,7 +220,6 @@ class Bufferpool:
             
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
             
-
     def write_indirection(self, path, numCols, curIndex):
         for i in range(4):
             tempPage = Page()
