@@ -9,7 +9,6 @@
 
 #for arrays and stuff
 import numpy as np
-import os
 
 MAX_RECORDS_PER_PAGE = 512
 MAX_BASEPAGES_PER_RANGE = 16
@@ -44,13 +43,13 @@ class Page:
     def get_value(self, index):
         val = int.from_bytes(self.data[index*8:(index + 1)*8], 'big')
         return val
-
+        
     def read_from_disk(self, path, col):
         file = open(path, "rb")
         file.seek(col * 4096) #go to specific field
         self.data = bytearray(file.read(4096))
         file.close()
-        
+
     def write_to_disk(self, path, data, col):
         file = open(path, "wb")
         file.seek(col * 4096) #go to specific field
@@ -62,6 +61,7 @@ class Page:
         file.seek(col * 4096 + row * 8) #go to specific field and record
         file.write(data)
         file.close()
+    
     
 
 #One Base_Page Contains many pages/columns (16 BPs in Page Range)
@@ -154,16 +154,7 @@ class PageRange:
             return True
         else:
             return False
-    def countpages(self, path): 
-        for entry in os.listdir(path):
-            specifictablepath = os.path.join(path, entry)
-            if os.path.isfile(specifictablepath):
-                self.num_base_pages = self.num_base_pages + 1
-        for entry in os.listdir(path + '/tailPages'):
-            if os.path.isfile(specifictablepath):
-                self.num_base_pages = self.num_base_pages + 1
-
-        pass
+    
     def mergePages(self):
         for tailPage in self.tailPages:
             for records in range(tailPage.num_records):
