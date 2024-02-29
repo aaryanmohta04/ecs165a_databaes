@@ -52,7 +52,9 @@ class Table:
                 specifictablepath = os.path.join(path, entry)
                 if os.path.isdir(specifictablepath):
                     self.pageRangePaths.append(specifictablepath)
-                    self.num_pageRanges += 1   
+                    pagerange = PageRange(self.num_columns)
+                    pagerange.countpages(specifictablepath)
+                    self.num_pageRanges += 1  
     #added numCols to arguments because creating a PageRange requires numCols argument
     #added numCols to arguments because creating a PageRange requires numCols argument
     def add_page_range(self, numCols):
@@ -106,12 +108,13 @@ class Table:
         self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
     
-    def find_record(self,key,  rid, projected_columns_index):
+    def find_record(self,key,  rid, projected_columns_index, TPS):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
         rid = self.page_directory[rid]
         if(rid[3]== 't'):
-            if self.greaterthan(self.pageRange[rid[0]].TPS, [rid[1], rid[2]]):
+
+            if self.greaterthan(TPS, [rid[1], rid[2]]):
                 rid = self.pageRange[rid[0]].tailPages[rid[1]].BaseRID
                 rid = self.page_directory[rid]
 

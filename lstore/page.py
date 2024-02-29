@@ -9,6 +9,7 @@
 
 #for arrays and stuff
 import numpy as np
+import os
 
 MAX_RECORDS_PER_PAGE = 512
 MAX_BASEPAGES_PER_RANGE = 16
@@ -147,7 +148,16 @@ class PageRange:
             return True
         else:
             return False
-    
+    def countpages(self, path): 
+        for entry in os.listdir(path):
+            specifictablepath = os.path.join(path, entry)
+            if os.path.isfile(specifictablepath):
+                self.num_base_pages = self.num_base_pages + 1
+        for entry in os.listdir(path + '/tailPages'):
+            if os.path.isfile(specifictablepath):
+                self.num_base_pages = self.num_base_pages + 1
+
+        pass
     def mergePages(self):
         for tailPage in self.tailPages:
             for records in range(tailPage.num_records):
