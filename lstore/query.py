@@ -92,21 +92,21 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
-        rid = self.table.index.locate(search_key_index, search_key)
-        #for rid in rids: 
-        baseRID = rid
-        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same  
-        while relative_version != 0: 
-            if(rid[3] == 'b'):
-                if(rid != baseRID):
-                     rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
-            else: 
-                rid = self.table.pageRange[rid[0]].tailPages[rid[1]].indirection[rid[2]]
-            relative_version += 1
+        rids = self.table.index.locate(search_key_index, search_key)
+        for rid in rids: 
+            baseRID = rid
+            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same  
+            while relative_version != 0: 
+                if(rid[3] == 'b'):
+                    if(rid != baseRID):
+                        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+                else: 
+                    rid = self.table.pageRange[rid[0]].tailPages[rid[1]].indirection[rid[2]]
+                relative_version += 1
         records = []
-        #for rid in rids:
-        record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
-        records.append(record)
+        for rid in rids:
+            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+            records.append(record)
         return records
         pass
 
