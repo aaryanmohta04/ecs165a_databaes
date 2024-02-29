@@ -34,7 +34,8 @@ class Bufferpool:
     def start_table_dir(self, name, numCols): #makes directory for table within db directory
         path = self.path_to_root + f"/tables/"
         path = os.path.join(path, name)
-        os.mkdir(path)
+        if not os.path.exists(path):
+            os.mkdir(path)
         self.current_table_path = path
 
     def allocate_page_range(self, numCols, pageRangeIndex): #allocates enough space for 16 BPs in new page range

@@ -4,8 +4,14 @@ from time import time
 from lstore.page import PageRange
 from lstore.bufferpool import *
 import numpy as np
+import array
+import struct
 
-
+TABLEKEY = 0
+TABLENUMCOL = 1
+TABLECURPG = 2
+TABLECURBP = 3
+TABLECURREC = 4
 
 
 class Record:
@@ -23,7 +29,7 @@ class Table:
     :param num_columns: int     #Number of Columns: all columns are integer
     :param key: int             #Index of table key in columns
     """
-    def __init__(self, name, num_columns, key, bufferpool):
+    def __init__(self, name, num_columns, key, bufferpool, isNew):
         self.name = name
         self.key = key
         self.num_columns = num_columns
@@ -31,15 +37,21 @@ class Table:
         self.index = Index(self)
         self.bufferpool = bufferpool
         self.num_pageRanges = 0 # can be implemented using length
+        self.pageRangePaths = []
         self.pageRange = []
         self.curPageRange = 0
         self.curBP = 0
         self.curRecord = 0
+        if(isNew):
+            self.add_page_range(self.num_columns)
 
-        self.add_page_range(num_columns)
-        pass
     
-
+    def pullpagerangesfromdisk(self, path): 
+        for entry in os.listdir(path):
+                specifictablepath = os.path.join(path, entry)
+                if os.path.isdir(specifictablepath):
+                    self.pageRangePaths.append(specifictablepath)
+                    self.num_pageRanges += 1   
     #added numCols to arguments because creating a PageRange requires numCols argument
     #added numCols to arguments because creating a PageRange requires numCols argument
     def add_page_range(self, numCols):
@@ -58,7 +70,22 @@ class Table:
         else:
             self.add_page_range(self.num_columns)
             return self.pageRange[self.curPageRange]
-            
+        
+
+    def savemetadata(self, path):
+        arr = []
+        arr.append(self.key)
+        arr.append(self.num_columns)
+        arr.append(self.curPageRange)
+        arr.append(self.curBP)
+        arr.append(self.curRecord)
+        metadata = array.array('i', arr)
+
+        # Open the file in binary write mode
+        with open(path, 'wb') as file:
+            binary_data = metadata.tobytes()
+            file.write(binary_data)
+        pass
 
     def updateCurBP(self):
         self.curBP = self.pageRange[self.curPageRange].num_base_pages - 1 #update current Base Page based on current page range
