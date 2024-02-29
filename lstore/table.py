@@ -41,15 +41,16 @@ class Table:
     
 
     #added numCols to arguments because creating a PageRange requires numCols argument
+    #added numCols to arguments because creating a PageRange requires numCols argument
     def add_page_range(self, numCols):
-        page_range = PageRange(numCols) 
+        #page_range = PageRange(numCols) 
 
-        self.pageRange.append(page_range) #adding new page range to page range array
+        #self.pageRange.append(page_range) #adding new page range to page range array
         
-        self.curPageRange = len(self.pageRange) - 1 #update current page range
+        #self.curPageRange = len(self.pageRange) - 1 #update current page range
 
+        self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange) #when adding page range, need to allocate space in disk
         self.num_pageRanges += 1 #keep track of page range index
-        self.bufferpool.allocate_page_range(self.num_pageRanges, self.curPageRange) #when adding page range, need to allocate space in disk
         
     def get_page_range(self):
         if self.pageRange[self.curPageRange].has_capacity():
