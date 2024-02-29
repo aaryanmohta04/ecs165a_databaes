@@ -67,14 +67,10 @@ class Query:
         records = []
         rid = self.table.page_directory[rid]
         self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
-        newrid = []
         key_directory = (rid[0], rid[1], 'b')
-        for i in range(3):
-            frame_index = self.table.bufferpool.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
-            newrid.append(x)
+        newrid = self.table.bufferpool.extractindirection(key_directory, self.table.num_columns, rid[2])
+        TPS = self.table.bufferpool.extractTPS(key_directory, self.table.num_columns)
         rid = newrid
-        TPS = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
         record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
         records.append(record)
         return records

@@ -196,10 +196,46 @@ class Bufferpool:
         self.frames[frame_index].unpin_page()
     
 
-    def write_record_to_disk(self):
-        
-        pass
+    def extractRID(self,key_directory, num_columns, recordnumber): 
+        newrid = []
+        for i in range(3):
+            frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i][recordnumber*8:(recordnumber + 1)*8], 'big')
+            newrid.append(x)
+        return newrid
     
+    def extractRID(self,key_directory, num_columns, recordnumber): 
+            newrid = []
+            for i in range(3):
+                frame_index = self.frame_directory[key_directory]
+                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 8 ][recordnumber*8:(recordnumber + 1)*8], 'big')
+                newrid.append(x)
+            return newrid
+    
+    def extractindirection(self,key_directory, num_columns, recordnumber): 
+        newrid = []
+        for i in range(3):
+            frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 4][recordnumber*8:(recordnumber + 1)*8], 'big')
+            newrid.append(x)
+        return newrid
+    
+    def extractdata(self,key_directory, num_columns, recordnumber): 
+        data = []
+        for i in range(num_columns):
+            frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[i][recordnumber*8:(recordnumber + 1)*8], 'big')
+            data.append(x)
+        return data
+    
+    def extractTPS(self, key_directory, num_columns):
+        frame_index = self.frame_directory[key_directory]
+        x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 3][0:8], 'big')
+        y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 3][8:16], 'big')
+        return [x,y]
+
+    def write_record_to_disk(self):
+        pass
     # def write_to_disk(self, frame_index):
     #     frame = self.frames[frame_index]
     #     columns = frame.columns
