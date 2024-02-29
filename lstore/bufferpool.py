@@ -176,7 +176,7 @@ class Bufferpool:
             self.frames[frame_index].pin_page()
             
         for i in range(numColumns):
-            self.frames[frame_index].frameData.append(Page())
+            self.frames[frame_index].frameData[i] = Page()
             self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
         directory_key = (page_range_index, base_page_index, 'b')
@@ -213,7 +213,7 @@ class Bufferpool:
             self.frames[frame_index].pin_page()
             
         for i in range(numColumns):
-            self.frames[frame_index].frameData.append(Page())
+            self.frames[frame_index].frameData[i] = Page()
             self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
         directory_key = (page_range_index, tail_page_index, 't')
