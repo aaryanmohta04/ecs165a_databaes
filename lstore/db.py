@@ -58,7 +58,7 @@ class Database():
                 table.index.close_and_save(picklepath)
                 directorypath = self.path + f"/tables/{table.name}/pagedirectory.pkl"
                 with open(directorypath, 'wb') as file:
-                    pickle.dump(self.table.page_directory, file)
+                    pickle.dump(table.page_directory, file)
 
         pass
 
@@ -71,7 +71,7 @@ class Database():
     def create_table(self, name, num_columns, key_index):
        
         self.bufferpool.start_table_dir(name, num_columns) #makes table directory
-        self.bufferpool.allocate_page_range( num_columns, 0)
+        #self.bufferpool.allocate_page_range(num_columns, 0)
         table = Table(name, num_columns, key_index, self.bufferpool)
         if not os.path.exists(self.path + f"/tables/{table.name}"):
             os.mkdir(self.path + f"/tables/{table.name}")
