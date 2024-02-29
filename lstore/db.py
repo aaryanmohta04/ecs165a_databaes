@@ -112,9 +112,9 @@ class Database():
         self.tables.append(table)
         self.tablenames.append(name)
 
-    #     for table in self.tables:
-    #         print(table.name)
-    #     return table
+        #for table in self.tables:
+            #print(table.name)
+        return table
 
     
     # """
