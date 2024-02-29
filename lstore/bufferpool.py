@@ -100,17 +100,22 @@ class Bufferpool:
     def extractTPS(self, key_directory, num_columns):
         #frame_index = self.frame_directory[key_directory]
         frame_index = self.get_frame_index(key_directory)
-        x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][0:8], 'big')
-        y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][8:16], 'big')
+        if(len(((self.frames[frame_index]).frameData)) >= num_columns + 11):
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][0:8], 'big')
+            y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][8:16], 'big')
+        else: 
+            x = y = 0
         return [x,y]
     
     def extractRecordCount(self, key_directory, num_columns):
-        #frame_index = self.frame_directory[key_directory]
+        x = 0
         frame_index = self.get_frame_index(key_directory)
         if key_directory[2] == 'b':
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][16:24], 'big')
+            if(len(((self.frames[frame_index]).frameData)) >= num_columns + 11):
+                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][16:24], 'big')
         elif key_directory[2] == 't':
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 13][0:8], 'big')
+            if(len(((self.frames[frame_index]).frameData)) >= num_columns + 14):
+                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 13][0:8], 'big')
         
         return x
     
@@ -189,13 +194,11 @@ class Bufferpool:
         #self.frame_directory[directory_key] = frame_index
 
         if not numRecords == 0:
-
             self.frame_info[frame_index] = directory_key
-
             self.frames[frame_index].TPS = self.extractTPS(directory_key, numColumns)
             self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns)
 
-            for i in range(self.frames[frame_index.numRecords]):
+            for i in range(self.frames[frame_index].numRecords):
                 self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
                 self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
         
@@ -358,10 +361,10 @@ class Frame:
         self.numColumns = numColumns
         
     def set_dirty_bit(self):
-        if dirtyBit == True:
-            dirtyBit = False
+        if self.dirtyBit == True:
+            self.dirtyBit = False
         else:
-            dirtyBit = True
+            self.dirtyBit = True
         
     def pin_page(self):
         self.pinNum += 1

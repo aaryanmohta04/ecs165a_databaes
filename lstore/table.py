@@ -107,28 +107,31 @@ class Table:
         #self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
     
-    def find_record(self,key,  rid, projected_columns_index):
+    def find_record(self,key,  rid, projected_columns_index, TPS):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
         rid = self.page_directory[rid]
         if(rid[3]== 't'):
-            if self.greaterthan(self.pageRange[rid[0]].TPS, [rid[1], rid[2]]):
-                rid = self.pageRange[rid[0]].tailPages[rid[1]].BaseRID
-                rid = self.page_directory[rid]
+            self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns)
+            key_directory = (rid[0], rid[1], 't')
+            if self.greaterthan(TPS, [rid[1], rid[2]]):     
+                rid = self.bufferpool.extractBaseRID(key_directory, self.table.num_columns, rid[2])
+                self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+                key_directory = (rid[0], rid[1], 'b')
+                data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
+        else:
+            data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
 
         record = []
+        
         if(rid[3] == 'b'):
-            for i in range(len(projected_columns_index)):
-                if (projected_columns_index[i] == 1):
-                    bytearray = self.pageRange[rid[0]].basePages[rid[1]].pages[i].data
-                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
-                    record.append(value)
-        else:
-           for i in range(len(projected_columns_index)):
-                if (projected_columns_index[i] == 1):
-                    bytearray = self.pageRange[rid[0]].tailPages[rid[1]].pages[i].data
-                    value = int.from_bytes(bytearray[rid[2] * 8:rid[2] * 8 + 8], byteorder='big')
-                    record.append(value) 
+            self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+            key_directory = (rid[0], rid[1], 'b')
+            data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
+
+        for i in range(len(projected_columns_index)):
+            if (projected_columns_index[i] == 1):
+                record.append(data[i])
         retval = Record(key, rid, record)
         return retval 
         pass
@@ -176,7 +179,7 @@ class Table:
         RID = self.createBP_RID()
         self.page_directory[RID] = RID
         indirection = RID
-        self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, self.num_columns)
+        self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
         self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
         key = columns[0]
         self.index.add_node(key,RID)
