@@ -146,15 +146,15 @@ class Table:
 
     def curBP_has_Capacity(self, curBP):
         if self.bufferpool.frames[curBP].numRecords < 512:
-            return TRUE
+            return True
         else:
-            return FALSE
+            return False
 
     def curPR_has_Capacity(self, curPageRange):
         if self.bufferpool.frames[15].numRecords < 512:
-            return TRUE
+            return True
         else:
-            return FALSE
+            return False
 
     
     def get_key(self, RID):
@@ -165,7 +165,7 @@ class Table:
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
         self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
 
-        if self.curBP_has_Capacity(self.curBP) == FALSE:
+        if self.curBP_has_Capacity(self.curBP) == False:
             if self.curPR_has_Capacity(self.curPageRange):
                 self.curBP += 1
                 self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
