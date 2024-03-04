@@ -123,8 +123,8 @@ class Bufferpool:
     def in_pool(self, key):
         for i in range(len(self.frame_info)):
             if self.frame_info[i] == key:
-                return TRUE
-        return FALSE
+                return True
+        return False
             
     def get_frame_index(self, key_directory):
         for i in range(len(self.frame_info)):
@@ -173,7 +173,7 @@ class Bufferpool:
         path_to_page = self.current_table_path + f"/pageRange{page_range_index}/basePage{base_page_index}.bin"
         self.current_total_path = path_to_page
         d_key = (page_range_index, base_page_index, 'b')
-        if self.in_pool(d_key):
+        if not self.in_pool(d_key):
             if not self.has_capacity():
                 frame_index = self.evict_page()
                 #d_key_remove = self.frame_info[frame_index] #to remove the old info from frame_directory (frame_info will just be overwritten)
@@ -182,8 +182,10 @@ class Bufferpool:
             else:
                 frame_index = self.numFrames
                 self.frames.append(Frame(path_to_page, numColumns))
-        
-            self.frames[frame_index].pin_page()
+        else: 
+            frame_index = self.get_frame_index(d_key)
+
+        self.frames[frame_index].pin_page()
         for i in range(numColumns):
             self.frames[frame_index].frameData[i] = Page()
             self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
@@ -240,16 +242,18 @@ class Bufferpool:
 
     def insertRecBP(self, RID, start_time, schema_encoding, indirection, *columns, numColumns):
         key_directory = (RID[0], RID[1], 'b')
+        print(str(key_directory))
         frame_index = self.get_frame_index(key_directory=key_directory)
         self.frames[frame_index].pin_page()
         for i in range(numColumns): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.frames[frame_index].frameData[i].write(columns[i])
+            print("writing" + str(columns[i]))
         self.frames[frame_index].numRecords += 1
         self.frames[frame_index].rid.append(RID)
         self.frames[frame_index].start_time.append(start_time)
         self.frames[frame_index].schema_encoding.append(schema_encoding)
         self.frames[frame_index].indirection.append(indirection)
-
+        print(f"this is the frame index: {frame_index} and the rid added is : {RID}")
         self.frames[frame_index].set_dirty_bit()
         self.frames[frame_index].unpin_page()
 

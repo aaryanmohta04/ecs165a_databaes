@@ -179,7 +179,6 @@ class Table:
         RID = self.createBP_RID()
         self.page_directory[RID] = RID
         indirection = RID
-        print
         self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
         self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
         key = columns[0]
