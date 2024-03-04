@@ -120,10 +120,9 @@ class Bufferpool:
         return x
     
 #use frame directory
-    def in_pool(self, rid):
-        check_rid_directory_key = (rid[0], rid[1], rid[2])
+    def in_pool(self, key):
         for i in range(len(self.frame_info)):
-            if self.frame_info[i] == check_rid_directory_key:
+            if self.frame_info[i] == key:
                 return TRUE
         return FALSE
             
@@ -185,14 +184,12 @@ class Bufferpool:
                 self.frames.append(Frame(path_to_page, numColumns))
         
             self.frames[frame_index].pin_page()
-            
         for i in range(numColumns):
             self.frames[frame_index].frameData[i] = Page()
             self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
         directory_key = (page_range_index, base_page_index, 'b')
-        #self.frame_directory[directory_key] = frame_index
-
+        self.frame_info[frame_index] = directory_key
         if not numRecords == 0:
             self.frame_info[frame_index] = directory_key
             self.frames[frame_index].TPS = self.extractTPS(directory_key, numColumns)
@@ -201,7 +198,6 @@ class Bufferpool:
             for i in range(self.frames[frame_index].numRecords):
                 self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
                 self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
-        
         self.frames[frame_index].unpin_page()
 
         pass
@@ -243,17 +239,19 @@ class Bufferpool:
     
 
     def insertRecBP(self, RID, start_time, schema_encoding, indirection, *columns, numColumns):
-        self.frames[RID[1]].pin_page()
+        key_directory = (RID[0], RID[1], 'b')
+        frame_index = self.get_frame_index(key_directory=key_directory)
+        self.frames[frame_index].pin_page()
         for i in range(numColumns): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
-            self.frames[RID[1]].frameData[i].write(columns[i])
-        self.frames[RID[1]].numRecords += 1
-        self.frames[RID[1]].rid.append(RID)
-        self.frames[RID[1]].start_time.append(start_time)
-        self.frames[RID[1]].schema_encoding.append(schema_encoding)
-        self.frames[RID[1]].indirection.append(indirection)
+            self.frames[frame_index].frameData[i].write(columns[i])
+        self.frames[frame_index].numRecords += 1
+        self.frames[frame_index].rid.append(RID)
+        self.frames[frame_index].start_time.append(start_time)
+        self.frames[frame_index].schema_encoding.append(schema_encoding)
+        self.frames[frame_index].indirection.append(indirection)
 
-        self.frames[RID[1]].set_dirty_bit()
-        self.frames[RID[1]].unpin_page()
+        self.frames[frame_index].set_dirty_bit()
+        self.frames[frame_index].unpin_page()
 
     
     # def write_to_disk(self, frame_index):
