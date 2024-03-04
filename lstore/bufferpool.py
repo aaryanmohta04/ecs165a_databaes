@@ -253,9 +253,11 @@ class Bufferpool:
         self.frames[frame_index].start_time.append(start_time)
         self.frames[frame_index].schema_encoding.append(schema_encoding)
         self.frames[frame_index].indirection.append(indirection)
-        print(f"this is the frame index: {frame_index} and the rid added is : {RID}")
+        print(f"this is the frame index: {frame_index} and the rid list is : {str(self.frames[frame_index].rid)} +{str(self.frames[frame_index].start_time)}")
+        print(f"this is the data of the first column{str(self.frames[frame_index].frameData[0].data)}")
         self.frames[frame_index].set_dirty_bit()
         self.frames[frame_index].unpin_page()
+
 
     
     # def write_to_disk(self, frame_index):
@@ -350,7 +352,7 @@ class Frame:
         self.frameData = [None] * numColumns #like pages[]
         self.TPS = 0
         self.numRecords = 0
-        self.rid = [None] * 512
+        self.rid = []
         self.start_time = []
         self.schema_encoding = []
         self.indirection = []
