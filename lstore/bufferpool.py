@@ -75,16 +75,25 @@ class Bufferpool:
         frame_index = self.get_frame_index(key_directory)
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i][recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             newrid.append(x)
         return newrid
+    
+    def extractdata(self, frame_index, num_columns, recordnumber): 
+        data = []
+        
+        for i in range(num_columns):
+            #frame_index = self.frame_directory[key_directory]
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[i].data[recordnumber*8:(recordnumber + 1)*8], 'big')
+            data.append(x)
+        return data
     
     def extractIndirection(self, key_directory, num_columns, recordnumber): 
         newrid = []
         frame_index = self.get_frame_index(key_directory)
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 4][recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 4].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             newrid.append(x)
         return newrid
     
@@ -93,7 +102,7 @@ class Bufferpool:
         frame_index = self.get_frame_index(key_directory)
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 8][recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 8].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             newrid.append(x)
         return newrid
 
@@ -101,8 +110,8 @@ class Bufferpool:
         #frame_index = self.frame_directory[key_directory]
         frame_index = self.get_frame_index(key_directory)
         if(len(((self.frames[frame_index]).frameData)) >= num_columns + 11):
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][0:8], 'big')
-            y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][8:16], 'big')
+            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10].data[0:8], 'big')
+            y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10].data[8:16], 'big')
         else: 
             x = y = 0
         return [x,y]
@@ -112,10 +121,10 @@ class Bufferpool:
         frame_index = self.get_frame_index(key_directory)
         if key_directory[2] == 'b':
             if(len(((self.frames[frame_index]).frameData)) >= num_columns + 11):
-                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10][16:24], 'big')
+                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10].data[16:24], 'big')
         elif key_directory[2] == 't':
             if(len(((self.frames[frame_index]).frameData)) >= num_columns + 14):
-                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 13][0:8], 'big')
+                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 13].data[0:8], 'big')
         
         return x
     
@@ -251,7 +260,6 @@ class Bufferpool:
         for i in range(numColumns): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.frames[frame_index].frameData[i].write(columns[i])
             print("writing" + str(columns[i]))
-        # print(str(self.frames[frame_index].frameData[1].data))
         self.frames[frame_index].numRecords += 1
         #print("numRecords: " + str(self.frames[frame_index].numRecords))
         #print(str(self.frames[frame_index].has_capacity()))

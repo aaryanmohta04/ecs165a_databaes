@@ -63,19 +63,20 @@ class Query:
         # if self.table.index.has_index(search_key_index) == False:
         #     self.table.index.create_index(search_key_index)
         
-        rids = self.table.index.locate(search_key_index, search_key)
+        rid = self.table.index.locate(search_key_index, search_key)
         records = []
-        for rid in rids:
-            rid = self.table.page_directory[rid]
-            self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name, rid[2])
-            newrid = []
-            key_directory = (rid[0], rid[1], 'b')
-            print(self.table.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2]))
-            newrid = self.table.bufferpool.extractIndirection(key_directory, self.table.num_columns, rid[2])
-            rid = newrid
-            TPS = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
-            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
-            records.append(record)
+        # for rid in rids:
+        print(str(rid))
+        # rid = self.table.page_directory[rid]
+        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name, rid[2])
+        newrid = []
+        key_directory = (rid[0], rid[1], 'b')
+        print(self.table.bufferpool.extractdata(frame_index, self.table.num_columns, rid[2]))
+        newrid = self.table.bufferpool.extractIndirection(key_directory, self.table.num_columns, rid[2])
+        rid = newrid
+        TPS = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
+        record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+        records.append(record)
         return records
         pass
     

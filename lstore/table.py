@@ -136,6 +136,8 @@ class Table:
         retval = Record(key, rid, record)
         return retval 
         pass
+
+    
     def find_tail_rec_for_merge(self, rid):
         record = []
        
