@@ -98,12 +98,13 @@ class Table:
     def getCurBP(self):
         return self.pageRange[self.curPageRange].basePages[self.curBP]
 
-    def updateCurRecord(self):
-        self.curRecord = self.bufferpool.frames[self.curBP].numRecords
+    def updateCurRecord(self, frame_index):
+        #self.curRecord = self.bufferpool.frames[frame_index].numRecords #should be frame[frame_index found through curBP]
+        self.curRecord += 1
 
-    def createBP_RID(self):
+    def createBP_RID(self, frame_index):
        
-        tupleRID = (self.curPageRange, self.curBP, self.curRecord, 'b') 
+        tupleRID = (self.curPageRange, self.curBP, self.bufferpool.frames[frame_index].numRecords, 'b') 
         #self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
     
@@ -144,14 +145,15 @@ class Table:
                     record.append(value) 
         return record
 
-    def curBP_has_Capacity(self, curBP):
-        if self.bufferpool.frames[curBP].numRecords < 512:
+    def curBP_has_Capacity(self, frame_index):
+        if self.bufferpool.frames[frame_index].numRecords < 512: #should be frame[frame_index found through curBP]
             return True
         else:
             return False
 
-    def curPR_has_Capacity(self, curPageRange):
-        if self.bufferpool.frames[15].numRecords < 512:
+    def curPR_has_Capacity(self):
+        if self.bufferpool.frames[15].numRecords < 512: #need a better way to check, frames[15] just checks the 15th index in the bufferpool, we need to check the 15th base page in a page range
+            #could have an array of pageranges that have true or false in them (or 1 and 0 for easier storing)
             return True
         else:
             return False
@@ -163,24 +165,35 @@ class Table:
     
     def insertRec(self, start_time, schema_encoding, *columns):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
-        self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
+        frame_index = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
 
-        if self.curBP_has_Capacity(self.curBP) == False:
-            if self.curPR_has_Capacity(self.curPageRange):
-                self.curBP += 1
-                self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
-                self.updateCurRecord()
-            else:
-                self.curPageRange += 1
-                self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange)
-                self.curBP = 0
-                self.updateCurRecord()
+        # if self.curBP_has_Capacity(frame_index) == False:
+        #     if self.curPR_has_Capacity(self.curPageRange):
+        #         self.curBP += 1
+        #         self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
+        #         self.updateCurRecord()
+        #     else:
+        #         self.curPageRange += 1
+        #         self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange)
+        #         self.curBP = 0
+        #         self.updateCurRecord()
 
-        RID = self.createBP_RID()
+
+
+        RID = self.createBP_RID(frame_index)
         self.page_directory[RID] = RID
         indirection = RID
         self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
-        self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
+        print("RID " + str(self.curPageRange) + " " + str(self.curBP) + " " + str(self.bufferpool.frames[frame_index].numRecords - 1))
+        self.updateCurRecord(frame_index) #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
+        if self.bufferpool.frames[frame_index].has_capacity() == FALSE:
+            if self.curRecord == 8192:
+                self.curPageRange += 1
+                self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange)
+                self.curRecord = 0
+                self.curBP = 0
+            else:
+                self.updateCurBP()
         key = columns[0]
         self.index.add_node(key,RID)
 
