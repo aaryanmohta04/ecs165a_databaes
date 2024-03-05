@@ -182,25 +182,28 @@ class Bufferpool:
             else:
                 frame_index = self.numFrames
                 self.frames.append(Frame(path_to_page, numColumns))
+                self.numFrames += 1
+
+            self.frames[frame_index].pin_page()
+            for i in range(numColumns):
+                self.frames[frame_index].frameData[i] = Page()
+                self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
+            
+            directory_key = (page_range_index, base_page_index, 'b')
+            self.frame_info[frame_index] = directory_key
+            if not numRecords == 0:
+                self.frame_info[frame_index] = directory_key
+                self.frames[frame_index].TPS = self.extractTPS(directory_key, numColumns)
+                self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns)
+
+                for i in range(self.frames[frame_index].numRecords):
+                    self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
+                    self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
+            self.frames[frame_index].unpin_page()
         else: 
             frame_index = self.get_frame_index(d_key)
 
-        self.frames[frame_index].pin_page()
-        for i in range(numColumns):
-            self.frames[frame_index].frameData[i] = Page()
-            self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
-            
-        directory_key = (page_range_index, base_page_index, 'b')
-        self.frame_info[frame_index] = directory_key
-        if not numRecords == 0:
-            self.frame_info[frame_index] = directory_key
-            self.frames[frame_index].TPS = self.extractTPS(directory_key, numColumns)
-            self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns)
-
-            for i in range(self.frames[frame_index].numRecords):
-                self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
-                self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
-        self.frames[frame_index].unpin_page()
+        return frame_index
 
         pass
 
@@ -249,12 +252,15 @@ class Bufferpool:
             self.frames[frame_index].frameData[i].write(columns[i])
             print("writing" + str(columns[i]))
         self.frames[frame_index].numRecords += 1
+        #print("numRecords: " + str(self.frames[frame_index].numRecords))
+        #print(str(self.frames[frame_index].has_capacity()))
         self.frames[frame_index].rid.append(RID)
         self.frames[frame_index].start_time.append(start_time)
         self.frames[frame_index].schema_encoding.append(schema_encoding)
         self.frames[frame_index].indirection.append(indirection)
-        print(f"this is the frame index: {frame_index} and the rid list is : {str(self.frames[frame_index].rid)} +{str(self.frames[frame_index].start_time)}")
-        print(f"this is the data of the first column{str(self.frames[frame_index].frameData[0].data)}")
+        print(f"this is the frame index: {frame_index} and the rid list is : {str(self.frames[frame_index].rid[self.frames[frame_index].numRecords - 1])} +{str(self.frames[frame_index].start_time[self.frames[frame_index].numRecords - 1])}")
+        #print(f"this is the data of the first column{str(self.frames[frame_index].frameData[0].data)}")
+        #print(self.frames[frame_index].frameData[0].get_value(self.frames[frame_index].numRecords - 1))
         self.frames[frame_index].set_dirty_bit()
         self.frames[frame_index].unpin_page()
 
@@ -363,6 +369,12 @@ class Frame:
         self.columns = [None] * numColumns
         self.lastAccess = 0
         self.numColumns = numColumns
+
+    def has_capacity(self):
+        if self.numRecords < 512:
+            return TRUE
+        else: 
+            return FALSE
         
     def set_dirty_bit(self):
         if self.dirtyBit == True:
