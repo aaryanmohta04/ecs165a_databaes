@@ -80,11 +80,6 @@ class Database():
         pass
     
     def close(self):
-        # tables_path = self.path + '/tables/tables.csv'
-        # with open(tables_path, 'w', newline='') as file:
-        #     writer = csv.writer(file)
-        #     # for table in self.tablenames:
-        #     writer.writerow(self.tablenames)
 
         # close and save indexes for all tables: 
         for table in self.tables:

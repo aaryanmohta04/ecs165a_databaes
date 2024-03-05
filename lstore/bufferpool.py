@@ -137,7 +137,7 @@ class Bufferpool:
         page_to_evict = self.frames[0]
         evict_index = 0
         for i in range(len(self.frames) - 1):
-            if self.frames[i] > self.frames[i + 1]:
+            if self.frames[i].lastAccess > self.frames[i + 1].lastAccess:
                 if self.frames[i + 1].isPinned() == FALSE:
                     page_to_evict = self.frames[i + 1]
                     evict_index = i + 1
@@ -167,7 +167,7 @@ class Bufferpool:
             self.frames[evict_index].unpin_page()
         return evict_index
         #I'm thinking that if it's not dirty, we can just write over the info when we load, so we can just leave it and return which index it's at
-    
+
     #Bring page in from disk, if full, evict a page first
     def load_base_page(self, page_range_index, base_page_index, numColumns, table_name, numRecords):
         path_to_page = self.current_table_path + f"/pageRange{page_range_index}/basePage{base_page_index}.bin"
@@ -251,6 +251,7 @@ class Bufferpool:
         for i in range(numColumns): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.frames[frame_index].frameData[i].write(columns[i])
             print("writing" + str(columns[i]))
+        # print(str(self.frames[frame_index].frameData[1].data))
         self.frames[frame_index].numRecords += 1
         #print("numRecords: " + str(self.frames[frame_index].numRecords))
         #print(str(self.frames[frame_index].has_capacity()))
@@ -259,7 +260,6 @@ class Bufferpool:
         self.frames[frame_index].schema_encoding.append(schema_encoding)
         self.frames[frame_index].indirection.append(indirection)
         print(f"this is the frame index: {frame_index} and the rid list is : {str(self.frames[frame_index].rid[self.frames[frame_index].numRecords - 1])} +{str(self.frames[frame_index].start_time[self.frames[frame_index].numRecords - 1])}")
-        #print(f"this is the data of the first column{str(self.frames[frame_index].frameData[0].data)}")
         #print(self.frames[frame_index].frameData[0].get_value(self.frames[frame_index].numRecords - 1))
         self.frames[frame_index].set_dirty_bit()
         self.frames[frame_index].unpin_page()
@@ -282,7 +282,14 @@ class Bufferpool:
         for i in range(4):
             tempPage = Page()
             for j in range(self.frames[curIndex].numRecords):
-                tempPage.write(self.frames.rid[j][i])
+                if(self.frames[curIndex].rid[j][i] == 'b'): 
+                    tempPage.write(0)
+                elif(self.frames[curIndex].rid[j][i] == 't'):
+                    tempPage.write(1)
+                else: 
+                    tempPage.write(self.frames[curIndex].rid[j][i])
+
+                
             
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
             
@@ -290,7 +297,7 @@ class Bufferpool:
         for i in range(4):
             tempPage = Page()
             for j in range(self.frames[curIndex].numRecords):
-                tempPage.write(self.frames.indirection[j][i])
+                tempPage.write(self.frames[curIndex].indirection[j][i])
             
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
 
@@ -298,33 +305,33 @@ class Bufferpool:
         for i in range(4):
             tempPage = Page()
             for j in range(self.frames[curIndex].numRecords):
-                tempPage.write(self.frames.BaseRID[j][i])
+                tempPage.write(self.frames[curIndex].BaseRID[j][i])
             
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
 
     def write_start_time(self, path, numCols, curIndex):
         tempPage = Page()
-        for j in range(self.frames.curIndex.numRecords):
-            tempPage.write(self.frames.start_time[j])
+        for j in range(self.frames[curIndex].numRecords):
+            tempPage.write(self.frames[curIndex].start_time[j])
 
         tempPage.write_to_disk(path, tempPage.data, numCols)
 
     def write_schema_encoding(self, path, numCols, curIndex):
         tempPage = Page()
-        for j in range(self.frames.curIndex.numRecords):
-            tempPage.write(int)(self.frames.schema_encoding[j])
+        for j in range(self.frames[curIndex].numRecords):
+            tempPage.write(int(self.frames[curIndex].schema_encoding[j]))
 
         tempPage.write_to_disk(path, tempPage.data, numCols)
 
     def write_TPS(self, path, numCols, curIndex):
         for i in range(2):
             tempPage = Page()
-            tempPage.write(self.frames.TPS[i])
+            tempPage.write(self.frames[curIndex].TPS[i])
             tempPage.write_to_disk_record(path, tempPage.data, numCols, i)
 
     def write_numRecords(self, path, numCols, curIndex, row):
         tempPage = Page()
-        tempPage.write(self.frames.numRecords)
+        tempPage.write(self.frames[curIndex].numRecords)
         tempPage.write_to_disk_record(path, tempPage.data, numCols, row)
 
     def close(self):
@@ -356,7 +363,7 @@ class Frame:
 
     def __init__(self, path, numColumns):
         self.frameData = [None] * numColumns #like pages[]
-        self.TPS = 0
+        self.TPS = [0,0]
         self.numRecords = 0
         self.rid = []
         self.start_time = []
