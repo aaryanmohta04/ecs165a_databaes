@@ -204,7 +204,6 @@ class Bufferpool:
                 self.frame_info[frame_index] = directory_key
                 self.frames[frame_index].TPS = self.extractTPS(directory_key, numColumns)
                 self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns)
-
                 for i in range(self.frames[frame_index].numRecords):
                     self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
                     self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
