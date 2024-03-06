@@ -72,9 +72,12 @@ class Query:
         newrid = []
         key_directory = (rid[0], rid[1], 'b')
         print(self.table.bufferpool.extractdata(frame_index, self.table.num_columns, rid[2]))
-        newrid = self.table.bufferpool.extractIndirection(key_directory, self.table.num_columns, rid[2])
+        newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+        print(newrid)
         rid = newrid
-        TPS = int.from_bytes(((self.frames[frame_index]).frameData)[self.table.num_columns + i][rid[2]*8:(rid[2] + 1)*8], 'big')
+        # TPS = (self.table.bufferpool.frames[frame_index].TPS[rid[2]])
+        # print(TPS)
+        TPS = [0,0]
         record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
         records.append(record)
         return records

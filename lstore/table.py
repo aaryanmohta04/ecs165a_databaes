@@ -120,15 +120,15 @@ class Table:
                 self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
                 key_directory = (rid[0], rid[1], 'b')
                 data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
-        else:
-            data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
+            else:
+                data = self.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2])
 
         record = []
         
         if(rid[3] == 'b'):
-            self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+            frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name, self.curRecord)
             key_directory = (rid[0], rid[1], 'b')
-            data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
+            data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
 
         for i in range(len(projected_columns_index)):
             if (projected_columns_index[i] == 1):
