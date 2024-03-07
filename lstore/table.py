@@ -43,6 +43,8 @@ class Table:
         self.curPageRange = 0
         self.curBP = 0
         self.curRecord = 0
+        self.curFrameIndexBP = 0
+        self.curFrameIndexTP = 0
         if(isNew):
             self.add_page_range(self.num_columns)
 
@@ -98,17 +100,17 @@ class Table:
     def getCurBP(self):
         return self.pageRange[self.curPageRange].basePages[self.curBP]
 
-    def updateCurRecord(self, frame_index):
+    def updateCurRecord(self):
         #self.curRecord = self.bufferpool.frames[frame_index].numRecords #should be frame[frame_index found through curBP]
         self.curRecord += 1
 
-    def createBP_RID(self, frame_index):
+    def createBP_RID(self):
        
-        tupleRID = (self.curPageRange, self.curBP, self.bufferpool.frames[frame_index].numRecords, 'b') 
+        tupleRID = (self.curPageRange, self.curBP, self.bufferpool.frames[self.curFrameIndexBP].numRecords, 'b') 
         #self.pageRange[self.curPageRange].basePages[self.curBP].rid[self.curRecord] = tupleRID
         return tupleRID
     
-    def find_record(self,key,  rid, projected_columns_index, TPS):
+    def find_record(self, key,  rid, projected_columns_index, TPS):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
         rid = self.page_directory[rid]
@@ -116,19 +118,19 @@ class Table:
             self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns)
             key_directory = (rid[0], rid[1], 't')
             if self.greaterthan(TPS, [rid[1], rid[2]]):     
-                rid = self.bufferpool.extractBaseRID(key_directory, self.table.num_columns, rid[2])
-                self.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+                rid = self.bufferpool.extractBaseRID(key_directory, self.num_columns, rid[2])
+                self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
                 key_directory = (rid[0], rid[1], 'b')
-                data = self.bufferpool.extractData(key_directory, self.table.num_columns, rid[2])
+                data = self.bufferpool.extractData(key_directory, self.num_columns, rid[2])
             else:
-                data = self.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2])
+                data = self.bufferpool.extractdata(key_directory, self.num_columns, rid[2])
 
         record = []
         
         if(rid[3] == 'b'):
-            frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name, self.curRecord)
+            self.curFrameIndexBP = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
             key_directory = (rid[0], rid[1], 'b')
-            data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
+            data = self.bufferpool.extractdata(self.curFrameIndexBP, self.num_columns, rid[2])
 
         for i in range(len(projected_columns_index)):
             if (projected_columns_index[i] == 1):
@@ -147,8 +149,8 @@ class Table:
                     record.append(value) 
         return record
 
-    def curBP_has_Capacity(self, frame_index):
-        if self.bufferpool.frames[frame_index].numRecords < 512: #should be frame[frame_index found through curBP]
+    def curBP_has_Capacity(self):
+        if self.bufferpool.frames[self.curFrameIndexBP].numRecords < 512: #should be frame[frame_index found through curBP]
             return True
         else:
             return False
@@ -167,7 +169,7 @@ class Table:
     
     def insertRec(self, start_time, schema_encoding, *columns):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
-        frame_index = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
+        self.curFrameIndexBP = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
 
         # if self.curBP_has_Capacity(frame_index) == False:
         #     if self.curPR_has_Capacity(self.curPageRange):
@@ -182,13 +184,13 @@ class Table:
 
 
 
-        RID = self.createBP_RID(frame_index)
+        RID = self.createBP_RID()
         self.page_directory[RID] = RID
         indirection = RID
         self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
-        print("RID " + str(self.curPageRange) + " " + str(self.curBP) + " " + str(self.bufferpool.frames[frame_index].numRecords - 1))
-        self.updateCurRecord(frame_index) #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
-        if self.bufferpool.frames[frame_index].has_capacity() == FALSE:
+        print("RID " + str(self.curPageRange) + " " + str(self.curBP) + " " + str(self.bufferpool.frames[self.curFrameIndexBP].numRecords - 1))
+        self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
+        if self.bufferpool.frames[self.curFrameIndexBP].has_capacity() == FALSE:
             if self.curRecord == 8192:
                 self.curPageRange += 1
                 self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange)
@@ -218,8 +220,50 @@ class Table:
         # key = columns[0]
         # self.index.add_node(key,RID)
 
-    def updateRec(self):
-        pass
+    def updateRec(self, rid, baseRID, primary_key, *columns):
+        projected_columns_index = [] #creates array to tell which columns need to be raplced with base page record entry (done later)
+        for i in range(self.num_columns):
+            projected_columns_index.append(1)
+        
+        self.curFrameIndexBP = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name) #load base page of record to update and return record for the base page rid (also sets self.curFrameIndex to bp we loaded)
+        currentRID = self.bufferpool.frames[self.curFrameIndexBP].indirection[rid[2]] #find the rid in the indirection column of the record we're updating to get the most recently updated rid
+        try:    
+            record = self.find_record(primary_key, currentRID, projected_columns_index, self.bufferpool.frames[self.curFrameIndexBP].TPS[rid[2]]) #finds record using indirection in Base Record
+        except:
+            tempTPS = (currentRID[0], currentRID[1] + 1)
+            record = self.find_record(primary_key, currentRID, projected_columns_index, tempTPS) #finds record using indirection in Base Record
+
+        numTPS = 0 #count how many tail pages are in the directory
+        for path in os.scandir(f"{self.bufferpool.current_table_path}/pageRange{rid[0]}/tailPages"):
+            if path.is_file():
+                numTPS += 1
+
+        if not numTPS == 0:
+            numTPS -= 1 #make sure we're checking the existing tail page first because it might have capacity
+
+        self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name) #load tail page we need, will also check if current tail page is full, and if is, will allocate space for a new one and add to there instead
+
+        if not self.bufferpool.frames[self.curFrameIndexTP].has_capacity(): #if tail page is full, allocate new one, and load it
+            numTPS += 1
+            self.bufferpool.allocate_tail_page(self.num_columns, rid[0], numTPS)
+            self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name)
+
+        updateRID = (rid[0], numTPS, self.bufferpool.frames[self.curFrameIndexTP], 't')
+        self.bufferpool.insertRecTP(record, rid, updateRID, currentRID, baseRID, self.curFrameIndexBP, *columns)
+
+        self.page_directory[updateRID] = updateRID
+        # self.table.bufferpool.frames[self.curFrameIndexTP].indirection.append(currentRID) #make current indirection of bp the indirection of tp (DOING IT IN BUFFERPOOL.PY)
+        # self.table.bufferpool.frames[self.curFrameIndexTP].BaseRID.append(baseRID)
+
+
+        
+
+        
+
+
+        
+
+
 
     
     def __merge(self, PageRangeIndex):
