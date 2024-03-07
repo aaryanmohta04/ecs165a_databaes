@@ -51,6 +51,7 @@ class Page:
         file.close()
 
     def write_to_disk(self, path, data, col):
+        print("opening to write to disk: " + path)
         file = open(path, "wb")
         file.seek(col * 4096) #go to specific field
         file.write(data)

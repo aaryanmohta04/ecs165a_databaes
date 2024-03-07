@@ -66,14 +66,11 @@ class Query:
         rid = self.table.index.locate(search_key_index, search_key)
         records = []
         # for rid in rids:
-        print(str(rid))
         # rid = self.table.page_directory[rid]
         frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name, rid[2])
         newrid = []
         key_directory = (rid[0], rid[1], 'b')
-        print(self.table.bufferpool.extractdata(frame_index, self.table.num_columns, rid[2]))
         newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
-        print(newrid)
         rid = newrid
         # TPS = (self.table.bufferpool.frames[frame_index].TPS[rid[2]])
         # print(TPS)

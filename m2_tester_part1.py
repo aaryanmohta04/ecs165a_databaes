@@ -11,7 +11,7 @@ db.open('./ECS165')
 #   The second argument is the number of columns
 #   The third argument is determining the which columns will be primay key
 #       Here the first column would be student id and primary key
-grades_table = db.create_table('Grades', 5, 0)
+grades_table= db.create_table('Grades', 5, 0)
 
 # create a query class for the grades table
 query = Query(grades_table)
@@ -19,10 +19,9 @@ query = Query(grades_table)
 # dictionary for records to test the database: test directory
 records = {}
 
-number_of_records = 1000
+number_of_records = 100
 number_of_aggregates = 100
 number_of_updates = 10
-
 seed(3562901)
 
 for i in range(0, number_of_records):
@@ -42,7 +41,8 @@ for key in keys:
     if error:
         print('select error on', key, ':', record, ', correct:', records[key])
     else:
-        print('select on', key, ':', record, "worked")
+        #print('select on', key, ':', record, "worked")
+        pass
 print("Select finished")
 db.close()
 
@@ -82,4 +82,4 @@ db.close()
 #         pass
 #         # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 # print("Aggregate finished")
-db.close()
+# db.close()

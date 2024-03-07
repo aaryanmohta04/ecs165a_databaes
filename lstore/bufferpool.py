@@ -46,8 +46,8 @@ class Bufferpool:
             bp_file_location = f"{page_range_path}/basePage{i}.bin"
             bp_file = open(bp_file_location, "wb")
 
-            for j in range(numCols + 11): #number of columns + rid(4), indirection, time, schema (need base rid column too?), metadata: TPS, numRecords (one page with metadata single elements)
-                bp_file.write(bytearray(4096))
+            # for j in range(numCols + 11): #number of columns + rid(4), indirection, time, schema (need base rid column too?), metadata: TPS, numRecords (one page with metadata single elements)
+            #     bp_file.write(bytearray(4096))
 
             bp_file.close()
 
@@ -253,12 +253,10 @@ class Bufferpool:
 
     def insertRecBP(self, RID, start_time, schema_encoding, indirection, *columns, numColumns):
         key_directory = (RID[0], RID[1], 'b')
-        print(str(key_directory))
         frame_index = self.get_frame_index(key_directory=key_directory)
         self.frames[frame_index].pin_page()
         for i in range(numColumns): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
             self.frames[frame_index].frameData[i].write(columns[i])
-            print("writing" + str(columns[i]))
         self.frames[frame_index].numRecords += 1
         #print("numRecords: " + str(self.frames[frame_index].numRecords))
         #print(str(self.frames[frame_index].has_capacity()))
@@ -266,7 +264,6 @@ class Bufferpool:
         self.frames[frame_index].start_time.append(start_time)
         self.frames[frame_index].schema_encoding.append(schema_encoding)
         self.frames[frame_index].indirection.append(indirection)
-        print(f"this is the frame index: {frame_index} and the rid list is : {str(self.frames[frame_index].rid[self.frames[frame_index].numRecords - 1])} +{str(self.frames[frame_index].start_time[self.frames[frame_index].numRecords - 1])}")
         #print(self.frames[frame_index].frameData[0].get_value(self.frames[frame_index].numRecords - 1))
         self.frames[frame_index].set_dirty_bit()
         self.frames[frame_index].unpin_page()
@@ -304,8 +301,13 @@ class Bufferpool:
         for i in range(4):
             tempPage = Page()
             for j in range(self.frames[curIndex].numRecords):
-                tempPage.write(self.frames[curIndex].indirection[j][i])
-            
+                if self.frames[curIndex].indirection[j][i] == 'b':
+                    tempPage.write(0)
+                elif self.frames[curIndex].indirection[j][i] == 't':
+                    tempPage.write(1)
+                else:
+                    tempPage.write(self.frames[curIndex].indirection[j][i])
+
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
 
     def write_baseRid(self, path, numCols, curIndex):
@@ -341,17 +343,19 @@ class Bufferpool:
         tempPage.write(self.frames[curIndex].numRecords)
         tempPage.write_to_disk_record(path, tempPage.data, numCols, row)
 
-    def close(self):
+    def close(self, tablename):
+        print(f"closing {tablename}")
         for i in range(len(self.frames)):
-            if self.frames[i].dirtyBit == True:
+            # if self.frames[i].dirtyBit == True:
                 if self.frame_info[i][2] == 'b':
-                    path = f"{self.path_to_root}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin"
+                    path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin"
+                    print("closing and writing to path : " + path)
                     for j in range(len(self.frames[i].frameData)):
                         self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
                     self.write_rid(path, len(self.frames[i].frameData), i)
                     self.write_indirection(path, len(self.frames[i].frameData) + 4, i)
                     self.write_start_time(path, len(self.frames[i].frameData) + 8, i)
-                    self.write_schema_encoding(path. len(self.frames[i].frameData) + 9, i)
+                    self.write_schema_encoding(path, len(self.frames[i].frameData) + 9, i)
                     self.write_TPS(path, len(self.frames[i].frameData) + 10, i)
                     self.write_numRecords(path, len(self.frames[i].frameData) + 10, i, 2)
 

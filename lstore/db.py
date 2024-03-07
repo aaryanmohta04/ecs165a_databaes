@@ -80,7 +80,6 @@ class Database():
         pass
     
     def close(self):
-
         # close and save indexes for all tables: 
         for table in self.tables:
             picklepath = self.path + f"/tables/{table.name}/indices.pkl"
@@ -90,6 +89,7 @@ class Database():
                 pickle.dump(table.page_directory, file)
             metadatapath = self.path + f"/tables/{table.name}/metadata.bin"
             table.savemetadata(metadatapath)
+            table.bufferpool.close(table.name)
 
     """
     # Creates a new table
