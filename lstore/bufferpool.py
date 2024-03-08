@@ -101,9 +101,8 @@ class Bufferpool:
             newrid.append(x)
         return newrid
     
-    def extractBaseRID(self,key_directory, num_columns, recordnumber): 
+    def extractBaseRID(self,frame_index, num_columns, recordnumber): 
         newrid = []
-        frame_index = self.get_frame_index(key_directory)
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
             x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 8].data[recordnumber*8:(recordnumber + 1)*8], 'big')
@@ -369,7 +368,12 @@ class Bufferpool:
         for i in range(4):
             tempPage = Page()
             for j in range(self.frames[curIndex].numRecords):
-                tempPage.write(self.frames[curIndex].BaseRID[j][i])
+                if(self.frames[curIndex].BaseRID[j][i] == 'b'):
+                    tempPage.write(0)
+                elif(self.frames[curIndex].BaseRID[j][i] == 't'):
+                    tempPage.write(1)
+                else:
+                    tempPage.write(self.frames[curIndex].BaseRID[j][i])
             
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
 
@@ -415,7 +419,7 @@ class Bufferpool:
                     self.write_numRecords(path, len(self.frames[i].frameData) + 10, i, 2)
 
                 elif self.frame_info[i][2] == 't':
-                    path = f"{self.path_to_root}/pageRange{self.frame_info[i][0]}/tailPages/tailPage{self.frame_info[i][1]}.bin"
+                    path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/tailPages/tailPage{self.frame_info[i][1]}.bin"
                     for j in range(len(self.frames[i].frameData)):
                         self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
                     self.write_rid(path, len(self.frames[i].frameData), i)

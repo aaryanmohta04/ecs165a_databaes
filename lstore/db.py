@@ -24,6 +24,7 @@ class Database():
 
     # Not required for milestone1
     def open(self, path):
+        print("opening DB")
         self.bufferpool = Bufferpool(path) #create a bufferpool object for this db
         self.bufferpool.start_db_dir() #initiate directory given the path (or check if it exists)
         self.path = path
@@ -60,6 +61,7 @@ class Database():
                 table.curBP = arr[TABLECURBP]
                 table.curRecord = arr[TABLECURREC]
                 self.tables.append(table)
+                print(str(self.tables))
                 # self.tablenames.append(name)
 
 

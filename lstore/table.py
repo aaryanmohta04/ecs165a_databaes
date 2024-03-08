@@ -101,7 +101,7 @@ class Table:
         return self.pageRange[self.curPageRange].basePages[self.curBP]
 
     def updateCurRecord(self):
-        #self.curRecord = self.bufferpool.frames[frame_index].numRecords #should be frame[frame_index found through curBP]
+        #self.curRecord = self.bufferpool.frames[frame_index].numRecordss #should be frame[frame_index found through curBP]
         self.curRecord += 1
 
     def createBP_RID(self):
@@ -113,17 +113,16 @@ class Table:
     def find_record(self, key,  rid, projected_columns_index, TPS):
         #Assuming we have rid of the base page record
          # updating rid to the latest version of the record. 
-        rid = self.page_directory[rid]
         if(rid[3]== 't'):
-            self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns)
+            frame_index = self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns, self.name)
             key_directory = (rid[0], rid[1], 't')
             if self.greaterthan(TPS, [rid[1], rid[2]]):     
-                rid = self.bufferpool.extractBaseRID(key_directory, self.num_columns, rid[2])
-                self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
+                rid = self.bufferpool.extractBaseRID(frame_index, self.num_columns, rid[2])
+                frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
                 key_directory = (rid[0], rid[1], 'b')
-                data = self.bufferpool.extractData(key_directory, self.num_columns, rid[2])
+                data = self.bufferpool.extractData(frame_index, self.num_columns, rid[2])
             else:
-                data = self.bufferpool.extractdata(key_directory, self.num_columns, rid[2])
+                data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
 
         record = []
         
@@ -188,8 +187,7 @@ class Table:
         self.page_directory[RID] = RID
         indirection = RID
         self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
-        print("RID " + str(self.curPageRange) + " " + str(self.curBP) + " " + str(self.bufferpool.frames[self.curFrameIndexBP].numRecords - 1))
-        self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecords by 1 in insertRecBP
+        self.updateCurRecord() #make sure to increment self.bufferpool.frames[curBP].numRecordss by 1 in insertRecBP
         if self.bufferpool.frames[self.curFrameIndexBP].has_capacity() == FALSE:
             if self.curRecord == 8192:
                 self.curPageRange += 1
@@ -215,7 +213,7 @@ class Table:
         # RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
         # self.page_directory[RID] = RID
         # indirection = RID                                       #add RID to indirection column since this is insert, not update
-        # self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecords
+        # self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecordss
         # self.updateCurRecord()                                  #update record index for current BP
         # key = columns[0]
         # self.index.add_node(key,RID)
@@ -248,7 +246,7 @@ class Table:
             self.bufferpool.allocate_tail_page(self.num_columns, rid[0], numTPS)
             self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name)
 
-        updateRID = (rid[0], numTPS, self.bufferpool.frames[self.curFrameIndexTP], 't')
+        updateRID = (rid[0], numTPS, self.bufferpool.frames[self.curFrameIndexTP].numRecords, 't')
         self.bufferpool.insertRecTP(record, rid, updateRID, currentRID, baseRID, self.curFrameIndexBP, *columns)
 
         self.page_directory[updateRID] = updateRID
@@ -262,6 +260,8 @@ class Table:
 
 
         
+
+
 
 
 

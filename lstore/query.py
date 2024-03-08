@@ -73,7 +73,7 @@ class Query:
         records = []
         # for rid in rids:
         # rid = self.table.page_directory[rid]
-        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name, rid[2])
+        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
         newrid = []
         key_directory = (rid[0], rid[1], 'b')
         newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
@@ -187,14 +187,14 @@ class Query:
         sum = 0
         for rid in rids:
             rid = self.table.page_directory[rid]
-            self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns)
+            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
             key_directory = (rid[0], rid[1], 'b')
-            indirectrid = self.table.bufferpool.extractindirection(key_directory, self.table.num_columns, rid[2])
+            indirectrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
             if indirectrid[3] == 't':
                 if(self.table.greaterthan(self.table.bufferpool.extractTPS(key_directory, self.table.num_columns), [indirectrid[1], indirectrid[2]])):
                     data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2])
                 else:
-                    self.table.bufferpool.load_tail_page(indirectrid[0], indirectrid[1], self.table.num_columns)
+                    self.table.bufferpool.load_tail_page(indirectrid[0], indirectrid[1], self.table.num_columns, self.table.name)
                     key_directory = (indirectrid[0], indirectrid[1], 't')
                     data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, indirectrid[2])
                 
