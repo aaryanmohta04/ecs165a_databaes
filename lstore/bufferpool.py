@@ -345,10 +345,7 @@ class Bufferpool:
                 elif(self.frames[curIndex].rid[j][i] == 't'):
                     tempPage.write(1)
                 else: 
-                    tempPage.write(self.frames[curIndex].rid[j][i])
-
-                
-            
+                    tempPage.write(self.frames[curIndex].rid[j][i]) 
             tempPage.write_to_disk(path, tempPage.data, numCols + i)
             
     def write_indirection(self, path, numCols, curIndex):

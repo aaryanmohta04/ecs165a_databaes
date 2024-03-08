@@ -61,17 +61,17 @@ class Database():
                 table.curBP = arr[TABLECURBP]
                 table.curRecord = arr[TABLECURREC]
                 self.tables.append(table)
-                print(str(self.tables))
+                
                 # self.tablenames.append(name)
 
 
         # create indices, page directories for all columns. 
         for table in self.tables:
-            if os.path.exists(path + f"/tables/{table.name}/indices.pkl"):
-                table.index.load_index(path + f"/tables/{table.name}/indices.pkl")
-            if os.path.exists(path + f"/tables/{table.name}/pagedirectory.pkl"):
-                with open(path + f"/tables/{table.name}/pagedirectory.pkl", 'rb') as file:
-                    self.table.page_directory = pickle.load(file)
+            if os.path.exists(path + f"/{table.name}/indices.pkl"):
+                table.index.load_index(path + f"/{table.name}/indices.pkl")
+            if os.path.exists(path + f"/{table.name}/pagedirectory.pkl"):
+                with open(path + f"/{table.name}/pagedirectory.pkl", 'rb') as file:
+                    table.page_directory = pickle.load(file)
 
         # pulls page ranges and updates the table. Actual pagerange implementantion left
         for table in self.tables: 
