@@ -399,28 +399,26 @@ class Bufferpool:
     def close(self, tablename):
         print(f"closing {tablename}")
         for i in range(len(self.frames)):
-            # if self.frames[i].dirtyBit == True:
-                if self.frame_info[i][2] == 'b':
-                    path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin"
-                    print("closing and writing to path : " + path)
-                    for j in range(len(self.frames[i].frameData)):
-                        self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
-                    self.write_rid(path, len(self.frames[i].frameData), i)
-                    self.write_indirection(path, len(self.frames[i].frameData) + 4, i)
-                    self.write_start_time(path, len(self.frames[i].frameData) + 8, i)
-                    self.write_schema_encoding(path, len(self.frames[i].frameData) + 9, i)
-                    self.write_TPS(path, len(self.frames[i].frameData) + 10, i)
-                    self.write_numRecords(path, len(self.frames[i].frameData) + 10, i, 2)
+            frame_size = len(self.frames[i].frameData)
+        # if self.frames[i].dirtyBit == True:
+            if self.frame_info[i][2] == 'b':
+                path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin"  
+                self.write_start_time(path, frame_size + 8, i)
+                self.write_schema_encoding(path, frame_size + 9, i)
+                self.write_TPS(path, frame_size + 10, i)
+                self.write_numRecords(path, frame_size + 10, i, 2)
 
-                elif self.frame_info[i][2] == 't':
-                    path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/tailPages/tailPage{self.frame_info[i][1]}.bin"
-                    for j in range(len(self.frames[i].frameData)):
-                        self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
-                    self.write_rid(path, len(self.frames[i].frameData), i)
-                    self.write_indirection(path, len(self.frames[i].frameData) + 4, i)
-                    self.write_baseRid(path, len(self.frames[i].frameData) + 8, i)
-                    self.write_schema_encoding(path, len(self.frames[i].frameData) + 12, i)
-                    self.write_numRecords(path, len(self.frames[i].frameData) + 13, i, 0)
+            elif self.frame_info[i][2] == 't':
+                path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/tailPages/tailPage{self.frame_info[i][1]}.bin"
+                self.write_baseRid(path, frame_size + 8, i)
+                self.write_schema_encoding(path, frame_size + 12, i)
+                self.write_numRecords(path, frame_size + 13, i, 0)
+                
+            print("closing and writing to path : " + path)     
+            for j in range(frame_size):
+                self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
+            self.write_rid(path, frame_size, i)
+            self.write_indirection(path, frame_size + 4, i)
         pass
 
 class Frame:
