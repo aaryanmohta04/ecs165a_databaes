@@ -77,44 +77,48 @@ class Bufferpool:
     def extractRID(self, key_directory, num_columns, recordnumber): 
         newrid = []
         frame_index = self.get_frame_index(key_directory)
+        cur_frame = self.frames[frame_index]
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i].data[recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes((cur_frame.frameData)[num_columns + i].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             newrid.append(x)
         return newrid
     
     def extractdata(self, frame_index, num_columns, recordnumber): 
         data = []
-        
+        cur_frame = self.frames[frame_index]
         for i in range(num_columns):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[i].data[recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes((cur_frame.frameData)[i].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             data.append(x)
         return data
     
     def extractIndirection(self, key_directory, num_columns, recordnumber): 
         newrid = []
         frame_index = self.get_frame_index(key_directory)
+        cur_frame = self.frames[frame_index]
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 4].data[recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes((cur_frame.frameData)[num_columns + i + 4].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             newrid.append(x)
         return newrid
     
     def extractBaseRID(self,frame_index, num_columns, recordnumber): 
         newrid = []
+        cur_frame = self.frames[frame_index]
         for i in range(3):
             #frame_index = self.frame_directory[key_directory]
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + i + 8].data[recordnumber*8:(recordnumber + 1)*8], 'big')
+            x = int.from_bytes((cur_frame.frameData)[num_columns + i + 8].data[recordnumber*8:(recordnumber + 1)*8], 'big')
             newrid.append(x)
         return newrid
 
     def extractTPS(self, key_directory, num_columns):
         #frame_index = self.frame_directory[key_directory]
         frame_index = self.get_frame_index(key_directory)
+        cur_frame = self.frames[frame_index]
         if(len(((self.frames[frame_index]).frameData)) >= num_columns + 11):
-            x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10].data[0:8], 'big')
-            y = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10].data[8:16], 'big')
+            x = int.from_bytes((cur_frame.frameData)[num_columns + 10].data[0:8], 'big')
+            y = int.from_bytes((cur_frame.frameData)[num_columns + 10].data[8:16], 'big')
         else: 
             x = y = 0
         return [x,y]
@@ -122,12 +126,13 @@ class Bufferpool:
     def extractRecordCount(self, key_directory, num_columns):
         x = 0
         frame_index = self.get_frame_index(key_directory)
+        cur_frame = self.frames[frame_index]
         if key_directory[2] == 'b':
             if(len(((self.frames[frame_index]).frameData)) >= num_columns + 11):
-                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 10].data[16:24], 'big')
+                x = int.from_bytes((cur_frame.frameData)[num_columns + 10].data[16:24], 'big')
         elif key_directory[2] == 't':
             if(len(((self.frames[frame_index]).frameData)) >= num_columns + 14):
-                x = int.from_bytes(((self.frames[frame_index]).frameData)[num_columns + 13].data[0:8], 'big')
+                x = int.from_bytes((cur_frame.frameData)[num_columns + 13].data[0:8], 'big')
         
         return x
     
@@ -153,72 +158,76 @@ class Bufferpool:
                 if self.frames[i + 1].isPinned() == FALSE:
                     page_to_evict = self.frames[i + 1]
                     evict_index = i + 1
+        evict_frame = self.frames[evict_index]
+        frame_size = len(evict_frame.frameData)
         if(page_to_evict.dirtyBit == TRUE):
             #self.frames[evict_index].write_to_disk(self.current_total_path, self.frames[evict_index].frameData) #writes data to disk
-            self.frames[evict_index].pin_page()
+            evict_frame.pin_page()
+            self.write_rid(path, frame_size, evict_index)
+            self.write_indirection(path, frame_size + 4, evict_index)
             if self.frame_info[evict_index][2] == 'b':
                     path = f"{self.path_to_root}/pageRange{self.frame_info[evict_index][0]}/basePage{self.frame_info[evict_index][1]}.bin"
-                    for j in range(len(self.frames[evict_index].frameData)):
-                        self.frames[evict_index].frameData[j].write_to_disk(path, self.frames[evict_index].frameData[j].data, j)
-                    self.write_rid(path, len(self.frames[evict_index].frameData), evict_index)
-                    self.write_indirection(path, len(self.frames[evict_index].frameData) + 4, evict_index)
-                    self.write_start_time(path, len(self.frames[evict_index].frameData) + 8, evict_index)
-                    self.write_schema_encoding(path. len(self.frames[evict_index].frameData) + 9, evict_index)
-                    self.write_TPS(path, len(self.frames[evict_index].frameData) + 10, i)
-                    self.write_numRecords(path, len(self.frames[evict_index].frameData) + 10, evict_index, 2)
+                    self.write_start_time(path, frame_size + 8, evict_index)
+                    self.write_schema_encoding(path, frame_size + 9, evict_index)
+                    self.write_TPS(path, frame_size + 10, i)
+                    self.write_numRecords(path, frame_size + 10, evict_index, 2)
 
             elif self.frame_info[evict_index][2] == 't':
                     path = f"{self.path_to_root}/pageRange{self.frame_info[evict_index][0]}/tailPages/tailPage{self.frame_info[evict_index][1]}.bin"
-                    for j in range(len(self.frames[evict_index].frameData)):
-                        self.frames[evict_index].frameData[j].write_to_disk(path, self.frames[evict_index].frameData[j].data, j)
-                    self.write_rid(path, len(self.frames[evict_index].frameData), evict_index)
-                    self.write_indirection(path, len(self.frames[evict_index].frameData) + 4, evict_index)
-                    self.write_baseRid(path, len(self.frames[evict_index].frameData) + 8, evict_index)
-                    self.write_schema_encoding(path, len(self.frames[evict_index].frameData) + 12, evict_index)
-                    self.write_numRecords(path, len(self.frames[evict_index].frameData) + 13, evict_index, 0)
-            self.frames[evict_index].unpin_page()
+                    self.write_baseRid(path, frame_size + 8, evict_index)
+                    self.write_schema_encoding(path, frame_size + 12, evict_index)
+                    self.write_numRecords(path, frame_size + 13, evict_index, 0)
+                    
+            for j in range(frame_size):
+                evict_frame.frameData[j].write_to_disk(path, evict_frame.frameData[j].data, j)
+                
+            evict_frame.unpin_page()
         return evict_index
         #I'm thinking that if it's not dirty, we can just write over the info when we load, so we can just leave it and return which index it's at
+
+    def get_empty_frame(self, path, numColumns):
+        if not self.has_capacity():
+            frame_index = self.evict_page()
+            #d_key_remove = self.frame_info[frame_index] #to remove the old info from frame_directory (frame_info will just be overwritten)
+            #self.frame_directory.remove(d_key_remove)
+            self.frames[frame_index] = Frame(path_to_page, numColumns)
+        else:
+            frame_index = self.numFrames
+            self.frames.append(Frame(path_to_page, numColumns))
+            self.numFrames += 1
+        return frame_index
 
     #Bring page in from disk, if full, evict a page first
     def load_base_page(self, page_range_index, base_page_index, numColumns, table_name):
         path_to_page = self.current_table_path + f"/pageRange{page_range_index}/basePage{base_page_index}.bin"
         self.current_total_path = path_to_page
         d_key = (page_range_index, base_page_index, 'b')
-        if not self.in_pool(d_key):
-            if not self.has_capacity():
-                frame_index = self.evict_page()
-                #d_key_remove = self.frame_info[frame_index] #to remove the old info from frame_directory (frame_info will just be overwritten)
-                #self.frame_directory.remove(d_key_remove)
-                self.frames[frame_index] = Frame(path_to_page, numColumns)
-            else:
-                frame_index = self.numFrames
-                self.frames.append(Frame(path_to_page, numColumns))
-                self.numFrames += 1
+        if self.in_pool(d_key):
+            return self.get_frame_index(d_key)
 
-            self.frames[frame_index].pin_page()
-            for i in range(numColumns):
-                self.frames[frame_index].frameData[i] = Page()
-                self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
+        frame_index = get_empty_frame(path_to_page, numColumns)
+        cur_frame = self.frames[frame_index]
+        cur_frame.pin_page()
+        for i in range(numColumns):
+            cur_frame.frameData[i] = Page()
+            cur_frame.frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
-            directory_key = (page_range_index, base_page_index, 'b')
-            self.frame_info[frame_index] = directory_key
-            try:
-                self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns)
-            except:
-                self.frames[frame_index].numRecords = 0
+        directory_key = (page_range_index, base_page_index, 'b')
+        self.frame_info[frame_index] = directory_key
+        try:
+            cur_frame.numRecords = self.extractRecordCount(directory_key, numColumns)
+        except:
+            cur_frame.numRecords = 0
 
-            if not self.frames[frame_index].numRecords == 0:
-                #self.frame_info[frame_index] = directory_key (done in line 206)
-                self.frames[frame_index].TPS = self.extractTPS(directory_key, numColumns)
-                #self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns) (should've been done already if it wasn't error)
-                for i in range(self.frames[frame_index].numRecords):
-                    self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
-                    self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
+        if not cur_frame.numRecords == 0:
+            #self.frame_info[frame_index] = directory_key (done in line 206)
+            cur_frame.TPS = self.extractTPS(directory_key, numColumns)
+            #self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns) (should've been done already if it wasn't error)
+            for i in range(cur_frame.numRecords):
+                cur_frame.rid[i] = self.extractRID(directory_key, numColumns, 0)
+                cur_frame.indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
 
-            self.frames[frame_index].unpin_page()
-        else: 
-            frame_index = self.get_frame_index(d_key)
+            cur_frame.unpin_page()
 
         return frame_index
 
@@ -227,48 +236,35 @@ class Bufferpool:
     def load_tail_page(self, page_range_index, tail_page_index, numColumns, table_name):
         path_to_page = self.current_table_path + f"/pageRange{page_range_index}/tailPages/tailPage{tail_page_index}.bin"
         self.current_total_path = path_to_page
-
         self.allocate_tail_page(numColumns, page_range_index, tail_page_index) #will check if the tail page exists already, and if not, create it
-
         d_key = (page_range_index, tail_page_index, 't')
-        if not self.in_pool(d_key):
-            if not self.has_capacity():
-                frame_index = self.evict_page()
-                #d_key_remove = self.frame_info[frame_index]
-                #self.frame_directory.remove(d_key_remove)
-                self.frames[frame_index] = Frame(path_to_page, numColumns)
-            else:
-                frame_index = self.numFrames
-                self.frames.append(Frame(path_to_page, numColumns))
-                self.numFrames += 1
-        
+        if self.in_pool(d_key):
+            return self.get_frame_index(d_key)
 
-            self.frames[frame_index].pin_page()
+        frame_index = get_empty_frame(path_to_page, numColumns)
+        cur_frame = self.frames[frame_index]
+        cur_frame.pin_page()
             
-            for i in range(numColumns):
-                self.frames[frame_index].frameData[i] = Page()
-                self.frames[frame_index].frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
+        for i in range(numColumns):
+            cur_frame.frameData[i] = Page()
+            cur_frame.frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
-            directory_key = (page_range_index, tail_page_index, 't')
-            self.frame_info[frame_index] = directory_key
+        directory_key = (page_range_index, tail_page_index, 't')
+        self.frame_info[frame_index] = directory_key
 
-            try:
-                self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns)
-            except:
-                self.frames[frame_index].numRecords = 0
+        try:
+            cur_frame.numRecords = self.extractRecordCount(directory_key, numColumns)
+        except:
+            cur_frame.numRecords = 0
 
-            if not self.frames[frame_index].numRecords == 0:
-                #self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns) (should've been done already if it didn't cause error)
-
-                for i in range(self.frames[frame_index.numRecords]):
-                    self.frames[frame_index].rid[i] = self.extractRID(directory_key, numColumns, 0)
-                    self.frames[frame_index].indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
-                    self.frames[frame_index].BaseRID[i] = self.extractBaseRID(directory_key, numColumns, 0)
+        if not cur_frame.numRecords == 0:
+            #self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns) (should've been done already if it didn't cause error)
+            for i in range(self.frames[frame_index.numRecords]):
+                cur_frame.rid[i] = self.extractRID(directory_key, numColumns, 0)
+                cur_frame.indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
+                cur_frame.BaseRID[i] = self.extractBaseRID(directory_key, numColumns, 0)
         
-            self.frames[frame_index].unpin_page()
-
-        else:
-            frame_index = self.get_frame_index(d_key)
+        cur_frame.unpin_page()
 
         return frame_index
             
@@ -277,19 +273,20 @@ class Bufferpool:
     def insertRecBP(self, RID, start_time, schema_encoding, indirection, *columns, numColumns):
         key_directory = (RID[0], RID[1], 'b')
         frame_index = self.get_frame_index(key_directory=key_directory)
-        self.frames[frame_index].pin_page()
+        cur_frame = self.frames[frame_index]
+        cur_frame.pin_page()
         for i in range(numColumns): #iterates through number of columns and writes data in *columns to corresponding page in page[] 
-            self.frames[frame_index].frameData[i].write(columns[i])
-        self.frames[frame_index].numRecords += 1
+            cur_frame.frameData[i].write(columns[i])
+        cur_frame.numRecords += 1
         #print("numRecords: " + str(self.frames[frame_index].numRecords))
         #print(str(self.frames[frame_index].has_capacity()))
-        self.frames[frame_index].rid.append(RID)
-        self.frames[frame_index].start_time.append(start_time)
-        self.frames[frame_index].schema_encoding.append(schema_encoding)
-        self.frames[frame_index].indirection.append(indirection)
+        cur_frame.rid.append(RID)
+        cur_frame.start_time.append(start_time)
+        cur_frame.schema_encoding.append(schema_encoding)
+        cur_frame.indirection.append(indirection)
         #print(self.frames[frame_index].frameData[0].get_value(self.frames[frame_index].numRecords - 1))
-        self.frames[frame_index].set_dirty_bit()
-        self.frames[frame_index].unpin_page()
+        cur_frame.set_dirty_bit()
+        cur_frame.unpin_page()
 
     def insertRecTP(self, record, rid, updateRID, currentRID, baseRID, curFrameIndexBP, *columns):
         key_directory = (updateRID[0], updateRID[1], 't')
