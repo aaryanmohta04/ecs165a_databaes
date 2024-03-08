@@ -117,10 +117,10 @@ class Table:
             frame_index = self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns, self.name)
             key_directory = (rid[0], rid[1], 't')
             if self.greaterthan(TPS, [rid[1], rid[2]]):     
-                rid = self.bufferpool.extractBaseRID(frame_index, self.num_columns, rid[2])
+                rid = self.bufferpool.frames[frame_index].BaseRID[rid[2]]
                 frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
                 key_directory = (rid[0], rid[1], 'b')
-                data = self.bufferpool.extractData(frame_index, self.num_columns, rid[2])
+                data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
             else:
                 data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
 
