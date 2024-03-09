@@ -120,9 +120,8 @@ class Table:
                 rid = self.bufferpool.frames[frame_index].BaseRID[rid[2]]
                 frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
                 key_directory = (rid[0], rid[1], 'b')
-                data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
-            else:
-                data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
+                
+            data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
 
         record = []
         

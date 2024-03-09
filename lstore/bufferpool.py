@@ -163,8 +163,6 @@ class Bufferpool:
         if(page_to_evict.dirtyBit == TRUE):
             #self.frames[evict_index].write_to_disk(self.current_total_path, self.frames[evict_index].frameData) #writes data to disk
             evict_frame.pin_page()
-            self.write_rid(path, frame_size, evict_index)
-            self.write_indirection(path, frame_size + 4, evict_index)
             if self.frame_info[evict_index][2] == 'b':
                     path = f"{self.path_to_root}/pageRange{self.frame_info[evict_index][0]}/basePage{self.frame_info[evict_index][1]}.bin"
                     self.write_start_time(path, frame_size + 8, evict_index)
@@ -180,6 +178,8 @@ class Bufferpool:
                     
             for j in range(frame_size):
                 evict_frame.frameData[j].write_to_disk(path, evict_frame.frameData[j].data, j)
+            self.write_rid(path, frame_size, evict_index)
+            self.write_indirection(path, frame_size + 4, evict_index)
                 
             evict_frame.unpin_page()
         return evict_index
