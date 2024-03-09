@@ -147,22 +147,23 @@ class Bufferpool:
         for i in range(len(self.frame_info)):
             if self.frame_info[i] == key_directory:
                 return i
-       
-    
-    #LRU, send to disk
-    def evict_page(self):
-        page_to_evict = self.frames[0]
+         
+    def LRU(self):
         evict_index = 0
         for i in range(len(self.frames) - 1):
             if self.frames[i].lastAccess > self.frames[i + 1].lastAccess:
                 if self.frames[i + 1].isPinned() == FALSE:
-                    page_to_evict = self.frames[i + 1]
                     evict_index = i + 1
+        return evict_index
+    
+    def evict_page(self):
+        evict_index = LRU()
         evict_frame = self.frames[evict_index]
         frame_size = len(evict_frame.frameData)
         if(page_to_evict.dirtyBit == TRUE):
             #self.frames[evict_index].write_to_disk(self.current_total_path, self.frames[evict_index].frameData) #writes data to disk
             evict_frame.pin_page()
+            
             if self.frame_info[evict_index][2] == 'b':
                     path = f"{self.path_to_root}/pageRange{self.frame_info[evict_index][0]}/basePage{self.frame_info[evict_index][1]}.bin"
                     self.write_start_time(path, frame_size + 8, evict_index)
@@ -188,8 +189,6 @@ class Bufferpool:
     def get_empty_frame(self, path, numColumns):
         if not self.has_capacity():
             frame_index = self.evict_page()
-            #d_key_remove = self.frame_info[frame_index] #to remove the old info from frame_directory (frame_info will just be overwritten)
-            #self.frame_directory.remove(d_key_remove)
             self.frames[frame_index] = Frame(path_to_page, numColumns)
         else:
             frame_index = self.numFrames
@@ -208,26 +207,27 @@ class Bufferpool:
         frame_index = get_empty_frame(path_to_page, numColumns)
         cur_frame = self.frames[frame_index]
         cur_frame.pin_page()
+        self.frame_info[frame_index] = d_key
         for i in range(numColumns):
             cur_frame.frameData[i] = Page()
             cur_frame.frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
             
-        directory_key = (page_range_index, base_page_index, 'b')
-        self.frame_info[frame_index] = directory_key
-        try:
-            cur_frame.numRecords = self.extractRecordCount(directory_key, numColumns)
-        except:
-            cur_frame.numRecords = 0
+        load_meta_data(path_to_page, numColumns, frame_index, 'b')
+            
+        #try:
+        #    cur_frame.numRecords = self.extractRecordCount(directory_key, numColumns)
+        #except:
+        #    cur_frame.numRecords = 0
 
-        if not cur_frame.numRecords == 0:
+        #if not cur_frame.numRecords == 0:
             #self.frame_info[frame_index] = directory_key (done in line 206)
-            cur_frame.TPS = self.extractTPS(directory_key, numColumns)
+        #    cur_frame.TPS = self.extractTPS(directory_key, numColumns)
             #self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns) (should've been done already if it wasn't error)
-            for i in range(cur_frame.numRecords):
-                cur_frame.rid[i] = self.extractRID(directory_key, numColumns, 0)
-                cur_frame.indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
+        #    for i in range(cur_frame.numRecords):
+        #        cur_frame.rid[i] = self.extractRID(directory_key, numColumns, 0)
+        #        cur_frame.indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
 
-            cur_frame.unpin_page()
+        cur_frame.unpin_page()
 
         return frame_index
 
@@ -260,6 +260,7 @@ class Bufferpool:
         else:
             for i in maxPages:
                 frame_index.TPS.append(int.from_bytes(file.read(8*i), 'big'))
+        file.close()
          
         
 
@@ -274,13 +275,11 @@ class Bufferpool:
         frame_index = get_empty_frame(path_to_page, numColumns)
         cur_frame = self.frames[frame_index]
         cur_frame.pin_page()
+        self.frame_info[frame_index] = d_key
             
         for i in range(numColumns):
             cur_frame.frameData[i] = Page()
             cur_frame.frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
-            
-        directory_key = (page_range_index, tail_page_index, 't')
-        self.frame_info[frame_index] = directory_key
         
         load_meta_data(path_to_page, numColumns, frame_index, 't')
 
