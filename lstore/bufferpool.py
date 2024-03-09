@@ -244,8 +244,7 @@ class Bufferpool:
         maxPages = 512
         file = open(path, "rb")
         file.seek(index)
-        # 2^16 = 512 possible records
-        frame_index.numRecords = int.from_bytes(file.read(16), 'big')
+        frame_index.numRecords = int.from_bytes(file.read(8), 'big')
         if numRecords == 0:
             return
         for i in maxPages:
@@ -261,6 +260,48 @@ class Bufferpool:
             for i in maxPages:
                 frame_index.TPS.append(int.from_bytes(file.read(8*i), 'big'))
         file.close()
+        
+    def write_meta_data(self, path, numColumns, frame_index, page_type):
+        index = numColumns * 4096
+        maxPages = 512
+        file = open(path, "wb")
+        file.seek(index)
+        file.write((frame_index.numColumns).to_bytes(8, 'big'))
+        # RID
+        for i in maxPages:
+            write_RID(file, frame_index.rid, i)
+        # Indirection
+        for i in maxPages:
+            write_RID(file, frame_index.indirection, i)
+        # Schema
+        for i in maxPages:
+            file.write((frame_index.schema_encoding[i]).to_bytes(8, 'big'))
+        if page_type == 't':
+        # BaseRID
+            for i in maxPages:
+                write_RID(file, frame_index.BaseRID, i)
+        else:
+        # TPS
+            for i in maxPages:
+                file.write((frame_index.TPS[i]).to_bytes(8, 'big'))
+        file.close()
+        
+    def read_RID(self, file, rid, i):
+        for j in range(3):
+                rid[i].append(int.from_bytes(file.read(8), 'big'))
+        file_type = int.from_bytes(file.read(1), 'big')
+        if file_type == '0':
+            rid[i].append('t')
+        else:
+            rid[i].append('b')
+        
+    def write_RID(self, file, rid, i):
+        for j in range(3):
+                file.write((rid[i][j]).to_bytes(8, 'big'))
+        if frame_index.rid[i][3] == 't':
+            file.write((0).to_bytes(1, 'big'))
+        else:
+            file.write((1).to_bytes(1, 'big'))
          
         
 
@@ -349,19 +390,6 @@ class Bufferpool:
 
         self.frames[curFrameIndexBP].unpin_page()
 
-
-
-    
-    # def write_to_disk(self, frame_index):
-    #     frame = self.frames[frame_index]
-    #     columns = frame.columns
-    #     path_to_page = frame.path
-    #     if frame.dirtyBit == True:
-    #         bin = open(path_to_page, "wb")
-    #         for i in range(len(columns)):
-    #             # Write base/tail page
-    #             pass
-    #         bin.close()
     
     #Write all pages to disk
     def write_rid(self, path, numCols, curIndex): #curIndex refers to current BP index
