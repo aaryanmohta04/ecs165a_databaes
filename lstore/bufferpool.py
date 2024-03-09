@@ -232,6 +232,36 @@ class Bufferpool:
         return frame_index
 
         pass
+    
+    #File Structure:
+    # 1.) Pages (num_cols * 512 records of data): col1 -> col2 -> coln
+    # 2.) METADATA: numRecords -> RID * 512 -> Indirection * 512 -> schema * 512
+    # 3.) B vs T: If B: -> TPS  If T: -> BaseRID
+    
+    
+    def load_meta_data(self, path, numColumns, frame_index, page_type):
+        index = numColumns * 4096
+        maxPages = 512
+        file = open(path, "rb")
+        file.seek(index)
+        # 2^16 = 512 possible records
+        frame_index.numRecords = int.from_bytes(file.read(16), 'big')
+        if numRecords == 0:
+            return
+        for i in maxPages:
+            frame_index.rid.append(int.from_bytes(file.read(8*i), 'big'))
+        for i in maxPages:
+            frame_index.indirection.append(int.from_bytes(file.read(8*i), 'big'))
+        for i in maxPages:
+            frame_index.schema_encoding.append(int.from_bytes(file.read(8*i), 'big'))
+        if page_type == 't':
+            for i in maxPages:
+                frame_index.BaseRID.append(int.from_bytes(file.read(8*i), 'big'))
+        else:
+            for i in maxPages:
+                frame_index.TPS.append(int.from_bytes(file.read(8*i), 'big'))
+         
+        
 
     def load_tail_page(self, page_range_index, tail_page_index, numColumns, table_name):
         path_to_page = self.current_table_path + f"/pageRange{page_range_index}/tailPages/tailPage{tail_page_index}.bin"
@@ -251,18 +281,20 @@ class Bufferpool:
             
         directory_key = (page_range_index, tail_page_index, 't')
         self.frame_info[frame_index] = directory_key
+        
+        load_meta_data(path_to_page, numColumns, frame_index, 't')
 
-        try:
-            cur_frame.numRecords = self.extractRecordCount(directory_key, numColumns)
-        except:
-            cur_frame.numRecords = 0
+        #try:
+        #    cur_frame.numRecords = self.extractRecordCount(directory_key, numColumns)
+        #except:
+        #    cur_frame.numRecords = 0
 
-        if not cur_frame.numRecords == 0:
+        #if not cur_frame.numRecords == 0:
             #self.frames[frame_index].numRecords = self.extractRecordCount(directory_key, numColumns) (should've been done already if it didn't cause error)
-            for i in range(self.frames[frame_index.numRecords]):
-                cur_frame.rid[i] = self.extractRID(directory_key, numColumns, 0)
-                cur_frame.indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
-                cur_frame.BaseRID[i] = self.extractBaseRID(directory_key, numColumns, 0)
+        #    for i in range(self.frames[frame_index.numRecords]):
+        #        cur_frame.rid[i] = self.extractRID(directory_key, numColumns, 0)
+        #        cur_frame.indirection[i] = self.extractIndirection(directory_key, numColumns, 0)
+        #        cur_frame.BaseRID[i] = self.extractBaseRID(directory_key, numColumns, 0)
         
         cur_frame.unpin_page()
 
