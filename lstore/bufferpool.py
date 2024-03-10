@@ -63,7 +63,7 @@ class Bufferpool:
 
             for i in range(numCols + 14): #number of cols + rid(4), indirection, schema, base rid, metadata: numRecords
                 tp_file.write(bytearray(4096))
-
+            
             tp_file.close()
 
         
@@ -211,6 +211,7 @@ class Bufferpool:
         for i in range(numColumns):
             cur_frame.frameData[i] = Page()
             cur_frame.frameData[i].read_from_disk(path_to_page, i) #read data from page into frame
+        
             
         self.load_meta_data(path_to_page, numColumns, frame_index, 'b')
             
@@ -434,8 +435,8 @@ class Bufferpool:
         tempPage = Page()
         for j in range(self.frames[curIndex].numRecords):
             tempPage.write(self.frames[curIndex].start_time[j])
-
         tempPage.write_to_disk(path, tempPage.data, numCols)
+
 
     def write_schema_encoding(self, path, numCols, curIndex):
         tempPage = Page()
@@ -461,7 +462,7 @@ class Bufferpool:
             frame_size = len(self.frames[i].frameData)
         # if self.frames[i].dirtyBit == True:
             if self.frame_info[i][2] == 'b':
-                path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin"  
+                path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin" 
                 self.write_start_time(path, frame_size + 8, i)
                 self.write_schema_encoding(path, frame_size + 9, i)
                 self.write_TPS(path, frame_size + 10, i)
@@ -473,7 +474,7 @@ class Bufferpool:
                 self.write_schema_encoding(path, frame_size + 12, i)
                 self.write_numRecords(path, frame_size + 13, i, 0)
                 
-            print("closing and writing to path : " + path)     
+            print("closing and writing to path : " + path)    
             for j in range(frame_size):
                 self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
             self.write_rid(path, frame_size, i)

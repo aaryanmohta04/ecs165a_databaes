@@ -45,6 +45,7 @@ class Page:
         return val
         
     def read_from_disk(self, path, col):
+        print("reading from ", path)
         file = open(path, "rb")
         file.seek(col * 4096) #go to specific field
         self.data = bytearray(file.read(4096))
@@ -52,7 +53,7 @@ class Page:
 
     def write_to_disk(self, path, data, col):
         print("opening to write to disk: " + path)
-        file = open(path, "wb")
+        file = open(path, "rb+")
         file.seek(col * 4096) #go to specific field
         file.write(data)
         file.close()
@@ -156,23 +157,6 @@ class PageRange:
         else:
             return False
     
-    def mergePages(self):
-        for tailPage in self.tailPages:
-            for records in range(tailPage.num_records):
-                rid = tailPage.rid[records]
-                schema_encoding = tailPage.schema_encoding[records]
-
-                for basePage in self.basePages:
-                    if rid in basePage.rid:
-                        basePageRecord = basePage.rid.index(rid)
-                        for cols in range(len(schema_encoding)):
-                            if schema_encoding[cols] == '1':
-                                writeInValue = tailPage.pages[cols].get_value(records)
-                                basePage.pages[cols].data[basePageRecord * 8 :(basePageRecord + 1) * 8] = int(writeInValue).to_bytes(8, byteorder = 'big')
-                        break
-
-        self.tailPages = []
-        self.num_tail_pages = 0
 
     def add_tail_page(self, numCols):
         self.tailPages.append(TailPage(numCols))
