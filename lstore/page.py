@@ -59,7 +59,7 @@ class Page:
         file.close()
 
     def write_to_disk_record(self, path, data, col, row):
-        file = open(path, "wb")
+        file = open(path, "rb+")
         file.seek(col * 4096 + row * 8) #go to specific field and record
         file.write(data)
         file.close()

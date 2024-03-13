@@ -293,6 +293,7 @@ def durability_tester2():
         # Check inserted records using select query
         err = False
         for key in keys:
+
             record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
             error = False
             for i, column in enumerate(record.columns):

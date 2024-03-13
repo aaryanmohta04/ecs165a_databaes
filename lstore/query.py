@@ -78,6 +78,7 @@ class Query:
         key_directory = (rid[0], rid[1], 'b')
         newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
         rid = newrid
+        print("this should be a tail record: ", newrid)
         # TPS = (self.table.bufferpool.frames[frame_index].TPS[rid[2]])
         # print(TPS)
         TPS = [0,0]
