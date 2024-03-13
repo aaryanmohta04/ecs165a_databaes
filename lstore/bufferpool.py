@@ -265,6 +265,9 @@ class Bufferpool:
         index = 0
         if(page_type == 'b'):
             index = (numColumns + 10) * 4096
+
+            file.seek(0,0)
+            
         else:
             index = (numColumns + 13) * 4096
         file = open(path, "rb")
@@ -322,7 +325,29 @@ class Bufferpool:
             newSchema.append(newStr)
             newStr = ''
         self.frames[frame_index].schema_encoding = newSchema
-        
+        #read start_time
+        if(page_type == 'b'):
+            file.seek(0,0)
+            file.seek((numColumns + 9) * 4096)
+            for j in range(self.frames[frame_index].numRecords):
+                self.frames[frame_index].start_index.append(int.from_bytes(file.read(8), 'big'))
+        elif(page_type == 't'):
+            #read baseRID
+            newBaseRID = []
+            for i in range(4):
+                file.seek(0,0)
+                file.seek((numColumns + 9 + i) * 4096)
+                for j in range(self.frames[frame_index].numRecords):
+                    if(i == 0):
+                        newBaseRID.append([int.from_bytes(file.read(8), 'big')])
+                    elif( i == 3):
+                        if(int.from_bytes(file.read(8), 'big') == 0):
+                            newBaseRID[j].append('b')
+                        else:
+                            newBaseRID[j].append('t')
+                    else: 
+                        newBaseRID[j].append(int.from_bytes(file.read(8), 'big'))
+            self.frames[frame_index].BaseRID = newBaseRID
 
         # self.frames[frame_index].indirection = newIndirection
                 
@@ -330,7 +355,7 @@ class Bufferpool:
         # for i in maxPages:
         #     self.frames[frame_index].append(int.from_bytes(file.read(8*i), 'big'))
         # for i in maxPages:
-        #     self.frames[frame_index].append(int.from_bytes(file.read(8*i), 'big'))
+        #     self.frames[frame_index].append(int.from_bytes(file.read(8*i), '(page_big'))
         # if page_type == 't':
         #     for i in maxPages:
         #         self.frames[frame_index].append(int.from_bytes(file.read(8*i), 'big'))
