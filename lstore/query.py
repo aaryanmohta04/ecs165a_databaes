@@ -78,7 +78,6 @@ class Query:
         key_directory = (rid[0], rid[1], 'b')
         newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
         rid = newrid
-        print("this should be a tail record: ", newrid)
         # TPS = (self.table.bufferpool.frames[frame_index].TPS[rid[2]])
         # print(TPS)
         TPS = [0,0]
@@ -154,8 +153,6 @@ class Query:
         # self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns, record = record) #calls the insertion of record in Page.py (insertRecTP)
         # self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(oldRID) #sets indirection of updated record to previous update
         # self.table.pageRange[pageRangeIndex].tailPages[currentTP].BaseRID.append(BaseRID)
-
-
         # newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
         # updateRID = (pageRangeIndex, currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
         # self.table.page_directory[updateRID] = updateRID 
@@ -193,14 +190,14 @@ class Query:
             indirectrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
             if indirectrid[3] == 't':
                 if(self.table.greaterthan(self.table.bufferpool.extractTPS(key_directory, self.table.num_columns), [indirectrid[1], indirectrid[2]])):
-                    data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2])
+                    data = self.table.bufferpool.extractdata(frame_index, self.table.num_columns, rid[2])
                 else:
                     self.table.bufferpool.load_tail_page(indirectrid[0], indirectrid[1], self.table.num_columns, self.table.name)
                     key_directory = (indirectrid[0], indirectrid[1], 't')
-                    data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, indirectrid[2])
+                    data = self.table.bufferpool.extractdata(frame_index, self.table.num_columns, indirectrid[2])
                 
             if(rid[3] == 'b'):
-                data = self.table.bufferpool.extractdata(key_directory, self.table.num_columns, rid[2]) 
+                data = self.table.bufferpool.extractdata(frame_index, self.table.num_columns, rid[2]) 
             sum += data[aggregate_column_index]
 
         return sum

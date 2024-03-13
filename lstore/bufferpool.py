@@ -327,7 +327,7 @@ class Bufferpool:
             file.seek(0,0)
             file.seek((numColumns + 9) * 4096)
             for j in range(self.frames[frame_index].numRecords):
-                self.frames[frame_index].start_index.append(int.from_bytes(file.read(8), 'big'))
+                self.frames[frame_index].start_time.append(int.from_bytes(file.read(8), 'big'))
         elif(page_type == 't'):
             #read baseRID
             newBaseRID = []

@@ -262,16 +262,16 @@ def durability_tester1():
                     # print('update on', original, 'and', updated_columns, ':', record)
         print("Update finished")
 
-        # for i in range(0, number_of_aggregates):
-        #     r = sorted(sample(range(0, len(keys)), 2))
-        #     column_sum = sum(map(lambda key: records[key][0], keys[r[0]: r[1] + 1]))
-        #     result = query.sum(keys[r[0]], keys[r[1]], 0)
-        #     if column_sum != result:
-        #         print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
-        #     else:
-        #         pass
-        #         # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
-        # print("Aggregate finished")
+        for i in range(0, number_of_aggregates):
+            r = sorted(sample(range(0, len(keys)), 2))
+            column_sum = sum(map(lambda key: records[key][0], keys[r[0]: r[1] + 1]))
+            result = query.sum(keys[r[0]], keys[r[1]], 0)
+            if column_sum != result:
+                print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
+            else:
+                pass
+                # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+        print("Aggregate finished")
         db.close()
         print("DB is closed")
 def durability_tester2():
