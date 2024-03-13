@@ -69,20 +69,20 @@ class Query:
         # if self.table.index.has_index(search_key_index) == False:
         #     self.table.index.create_index(search_key_index)
         
-        rid = self.table.index.locate(search_key_index, search_key)
+        rids = self.table.index.locate(search_key_index, search_key)
         records = []
-        # for rid in rids:
+        for rid in rids:
         # rid = self.table.page_directory[rid]
-        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
-        newrid = []
-        key_directory = (rid[0], rid[1], 'b')
-        newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
-        rid = newrid
+            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+            newrid = []
+            key_directory = (rid[0], rid[1], 'b')
+            newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+            rid = newrid
         # TPS = (self.table.bufferpool.frames[frame_index].TPS[rid[2]])
         # print(TPS)
-        TPS = [0,0]
-        record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
-        records.append(record)
+            TPS = [0,0]
+            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+            records.append(record)
         return records
         pass
     
@@ -124,12 +124,15 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
-        rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
-        BaseRID = rid #sets baseRID to the rid found with key
+        rids = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
+        for rid in rids:
+            for i in len(columns):
+                self.table.index.indices[i][columns[i]] = rid
+            BaseRID = rid #sets baseRID to the rid found with key
         #oldRID = rid looks like it's the same as currentRID? so probably not needed
-        rid = self.table.page_directory[rid] #sets rid to the physical location of record using page_directory
+            rid = self.table.page_directory[rid] #sets rid to the physical location of record using page_directory
 
-        self.table.updateRec(rid, BaseRID, primary_key, *columns)
+            self.table.updateRec(rid, BaseRID, primary_key, *columns)
 
         # pageRangeIndex = rid[0]
         # pageIndex = rid[1]

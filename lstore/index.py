@@ -58,10 +58,10 @@ class Index:
         pass
 
 
-    def add_node(self, key, rid):
-        if self.indices[0] == None:                      # If column has no index
-            self.create_index(0)
-        self.indices[0][key] = rid
+    def add_node(self, col, key, rid):
+        if self.indices[col] == None:                      # If column has no index
+            self.create_index(col)
+        self.indices[col][key] = rid
         
     def update_index(self, rid, *columns):
         for key in columns:

@@ -195,8 +195,8 @@ class Table:
                 self.curBP = 0
             else:
                 self.updateCurBP()
-        key = columns[0]
-        self.index.add_node(key,RID)
+        for i in len(columns):
+            self.index.add_node(i, columns[i],RID)
 
         
         #     if self.pageRange[self.curPageRange].has_capacity():  #checks if current page range is full
