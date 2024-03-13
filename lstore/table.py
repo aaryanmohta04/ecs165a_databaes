@@ -227,7 +227,7 @@ class Table:
         try:    
             record = self.find_record(primary_key, currentRID, projected_columns_index, self.bufferpool.frames[self.curFrameIndexBP].TPS[rid[2]]) #finds record using indirection in Base Record
         except:
-            tempTPS = (currentRID[0], currentRID[1] + 1)
+            tempTPS = (0, 0)
             record = self.find_record(primary_key, currentRID, projected_columns_index, tempTPS) #finds record using indirection in Base Record
 
         numTPS = 0 #count how many tail pages are in the directory
@@ -240,7 +240,7 @@ class Table:
 
         self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name) #load tail page we need, will also check if current tail page is full, and if is, will allocate space for a new one and add to there instead
 
-        if not self.bufferpool.frames[self.curFrameIndexTP].has_capacity(): #if tail page is full, allocate new one, and load it
+        if self.bufferpool.frames[self.curFrameIndexTP].has_capacity() == FALSE: #if tail page is full, allocate new one, and load it
             numTPS += 1
             self.bufferpool.allocate_tail_page(self.num_columns, rid[0], numTPS)
             self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name)

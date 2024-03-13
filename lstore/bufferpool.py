@@ -165,21 +165,20 @@ class Bufferpool:
             
             if self.frame_info[evict_index][2] == 'b':
                     path = f"{self.path_to_root}/pageRange{self.frame_info[evict_index][0]}/basePage{self.frame_info[evict_index][1]}.bin"
-                    self.write_start_time(path, frame_size + 8, evict_index)
-                    self.write_schema_encoding(path, frame_size + 9, evict_index)
-                    self.write_TPS(path, frame_size + 10)
-                    self.write_numRecords(path, frame_size + 10, evict_index, 2)
+                    self.write_start_time(path, frame_size + 9, evict_index)
+                    #self.write_TPS(path, frame_size + 10)
+                    self.write_numRecords(path, frame_size + 10, evict_index, 0)
 
             elif self.frame_info[evict_index][2] == 't':
                     path = f"{self.path_to_root}/pageRange{self.frame_info[evict_index][0]}/tailPages/tailPage{self.frame_info[evict_index][1]}.bin"
-                    self.write_baseRid(path, frame_size + 8, evict_index)
-                    self.write_schema_encoding(path, frame_size + 12, evict_index)
+                    self.write_baseRid(path, frame_size + 9, evict_index)
                     self.write_numRecords(path, frame_size + 13, evict_index, 0)
                     
             for j in range(frame_size):
                 evict_frame.frameData[j].write_to_disk(path, evict_frame.frameData[j].data, j)
             self.write_rid(path, frame_size, evict_index)
             self.write_indirection(path, frame_size + 4, evict_index)
+            self.write_schema_encoding(path, frame_size + 8, evict_index)
                 
             evict_frame.unpin_page()
         return evict_index
@@ -306,6 +305,25 @@ class Bufferpool:
                 else: 
                     newIndirection[j].append(int.from_bytes(file.read(8), 'big'))
         self.frames[frame_index].indirection = newIndirection
+        #read schema_encoding
+        tempStr = ''
+        tempLen = 0
+        newStr = ''
+        newSchema = []
+        file.seek(0,0)
+        file.seek((numColumns + 8) * 4096)
+        for j in range(self.frames[frame_index].numRecords):
+            tempStr = str(int.from_bytes(file.read(8), 'big'))
+            tempLen = len(tempStr)
+            tempLen = numColumns - tempLen
+            for i in range(tempLen):
+                newStr = newStr + '0'
+            newStr = newStr + tempStr
+            newSchema.append(newStr)
+            newStr = ''
+        self.frames[frame_index].schema_encoding = newSchema
+        
+
         # self.frames[frame_index].indirection = newIndirection
                 
             #self.frames[frame_index].rid.append(int.from_bytes(file.read(8*i), 'big'))
@@ -321,47 +339,47 @@ class Bufferpool:
         #         self.frames[frame_index].append(int.from_bytes(file.read(8*i), 'big'))
         file.close()
 
-    def write_meta_data(self, path, numColumns, frame_index, page_type):
-        index = numColumns * 4096
-        maxPages = 512
-        file = open(path, "rb+")
-        file.seek(index)
-        file.write((self.frames[frame_index].numColumns).to_bytes(8, 'big'))
-        # RID
-        for i in maxPages:
-            self.write_RID(file, self.frames[frame_index].rid, i)
-        # Indirection
-        for i in maxPages:
-            self.write_RID(file, self.frames[frame_index].indirection, i)
-        # Schema
-        for i in maxPages:
-            file.write((self.frames[frame_index].schema_encoding[i]).to_bytes(8, 'big'))
-        if page_type == 't':
-        # BaseRID
-            for i in maxPages:
-                self.write_RID(file, self.frames[frame_index].BaseRID, i)
-        else:
-        # TPS
-            for i in maxPages:
-                file.write((self.frames[frame_index].TPS[i]).to_bytes(8, 'big'))
-        file.close()
+    # def write_meta_data(self, path, numColumns, frame_index, page_type):
+    #     index = numColumns * 4096
+    #     maxPages = 512
+    #     file = open(path, "rb+")
+    #     file.seek(index)
+    #     file.write((self.frames[frame_index].numColumns).to_bytes(8, 'big'))
+    #     # RID
+    #     for i in maxPages:
+    #         self.write_RID(file, self.frames[frame_index].rid, i)
+    #     # Indirection
+    #     for i in maxPages:
+    #         self.write_RID(file, self.frames[frame_index].indirection, i)
+    #     # Schema
+    #     for i in maxPages:
+    #         file.write(int(self.frames[frame_index].schema_encoding[i]).to_bytes(8, 'big'))
+    #     if page_type == 't':
+    #     # BaseRID
+    #         for i in maxPages:
+    #             self.write_RID(file, self.frames[frame_index].BaseRID, i)
+    #     else:
+    #     # TPS
+    #         for i in maxPages:
+    #             file.write((self.frames[frame_index].TPS[i]).to_bytes(8, 'big'))
+    #     file.close()
         
-    def read_RID(self, file, rid, i):
-        for j in range(3):
-                rid[i].append(int.from_bytes(file.read(8), 'big'))
-        file_type = int.from_bytes(file.read(1), 'big')
-        if file_type == '0':
-            rid[i].append('t')
-        else:
-            rid[i].append('b')
+    # def read_RID(self, file, rid, i):
+    #     for j in range(3):
+    #             rid[i].append(int.from_bytes(file.read(8), 'big'))
+    #     file_type = int.from_bytes(file.read(1), 'big')
+    #     if file_type == '0':
+    #         rid[i].append('t')
+    #     else:
+    #         rid[i].append('b')
         
-    def write_RID(self, file, rid, i):
-        for j in range(3):
-                file.write((rid[i][j]).to_bytes(8, 'big'))
-        if rid[i][3] == 't':
-            file.write((0).to_bytes(1, 'big'))
-        else:
-            file.write((1).to_bytes(1, 'big'))
+    # def write_RID(self, file, rid, i):
+    #     for j in range(3):
+    #             file.write((rid[i][j]).to_bytes(8, 'big'))
+    #     if rid[i][3] == 't':
+    #         file.write((0).to_bytes(1, 'big'))
+    #     else:
+    #         file.write((1).to_bytes(1, 'big'))
          
         
 
@@ -523,15 +541,13 @@ class Bufferpool:
         # if self.frames[i].dirtyBit == True:
             if self.frame_info[i][2] == 'b':
                 path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/basePage{self.frame_info[i][1]}.bin" 
-                self.write_start_time(path, frame_size + 8, i)
-                self.write_schema_encoding(path, frame_size + 9, i)
+                self.write_start_time(path, frame_size + 9, i)
                 # self.write_TPS(path, frame_size + 10, i)
                 self.write_numRecords(path, frame_size + 10, i)
 
             elif self.frame_info[i][2] == 't':
                 path = f"{self.path_to_root}/tables/{tablename}/pageRange{self.frame_info[i][0]}/tailPages/tailPage{self.frame_info[i][1]}.bin"
-                self.write_baseRid(path, frame_size + 8, i)
-                self.write_schema_encoding(path, frame_size + 12, i)
+                self.write_baseRid(path, frame_size + 9, i)
                 self.write_numRecords(path, frame_size + 13, i)
                 
             print("closing and writing to path : " + path)    
@@ -539,6 +555,7 @@ class Bufferpool:
                 self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
             self.write_rid(path, frame_size, i)
             self.write_indirection(path, frame_size + 4, i)
+            self.write_schema_encoding(path, frame_size + 8, i)
         pass
 
 class Frame:
