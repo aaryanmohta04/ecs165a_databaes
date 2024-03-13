@@ -264,10 +264,7 @@ class Bufferpool:
     def load_meta_data(self, path, numColumns, frame_index, page_type):
         index = 0
         if(page_type == 'b'):
-            index = (numColumns + 10) * 4096
-
-            file.seek(0,0)
-            
+            index = (numColumns + 10) * 4096           
         else:
             index = (numColumns + 13) * 4096
         file = open(path, "rb")
