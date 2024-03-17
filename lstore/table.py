@@ -179,6 +179,8 @@ class Table:
             self.curPageRange -= 1
         elif(self.curRecord % 511 == 0 and self.curRecord != 0):
             self.curBP -= 1
+        
+        self.lockRelease(rid, 'W')
 
         #print('Rec:' + str(self.curRecord))
         #print('BP:' + str(self.curBP))
@@ -225,6 +227,8 @@ class Table:
         self.curFrameIndexBP = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
 
         RID = self.createBP_RID()
+
+        self.lockAcquire(RID, 'W')
 
         self.page_directory[RID] = RID
         indirection = RID
