@@ -27,7 +27,7 @@ class lock_manager:
             return False
         
     def remove(self, rid):
-        curNode = lock_manager._search(rid)
+        curNode = self._search(rid)
 
         if curNode != False:
             self.manager.remove(curNode)
