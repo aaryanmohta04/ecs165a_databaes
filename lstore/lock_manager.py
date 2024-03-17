@@ -16,7 +16,7 @@ class lock_manager:
         for i in range(len(self.manager)):
             if self.manager[i].rid == rid:
                 self.curIndex = i
-                return self.manager[i].lock
+                return self.manager[i].lockInfo
         return False
     
     def _search(self, rid):

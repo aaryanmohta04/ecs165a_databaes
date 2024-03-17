@@ -460,6 +460,36 @@ class Bufferpool:
         cur_frame.set_dirty_bit()
         cur_frame.unpin_page()
 
+    # def insertRecTP(self, record, rid, updateRID, currentRID, baseRID, curFrameIndexBP, *columns):
+    #     key_directory = (updateRID[0], updateRID[1], 't')
+    #     frame_index = self.get_frame_index(key_directory=key_directory)
+    #     self.frames[frame_index].pin_page()
+    #     self.frames[curFrameIndexBP].pin_page()
+
+    #     schema = '' #aded schema encoding here because it's where I iterate through the data anyway
+    #     for j in range(len(columns)):
+    #         if columns[j] != None:
+    #             self.frames[frame_index].frameData[j].write(columns[j])
+    #             schema = schema + '1'
+
+    #             self.frames[curFrameIndexBP].schema_encoding[j] = 1
+    #         else:
+    #             self.frames[frame_index].frameData[j].write(record.columns[j])
+    #             schema = schema + '0'
+
+    #     self.frames[frame_index].schema_encoding.append(schema) #puts the schema encoding in
+    #     self.frames[frame_index].numRecords += 1
+
+    #     self.frames[frame_index].indirection.append(currentRID)
+    #     self.frames[frame_index].BaseRID.append(baseRID)
+    #     self.frames[frame_index].rid.append(updateRID)
+
+    #     self.frames[frame_index].unpin_page()
+      
+    #     self.frames[curFrameIndexBP].indirection[rid[2]] = updateRID #set basePage indirection to new tail record rid
+
+    #     self.frames[curFrameIndexBP].unpin_page()
+        
     def insertRecTP(self, record, rid, updateRID, currentRID, baseRID, curFrameIndexBP, *columns):
         key_directory = (updateRID[0], updateRID[1], 't')
         frame_index = self.get_frame_index(key_directory=key_directory)
@@ -467,15 +497,21 @@ class Bufferpool:
         self.frames[curFrameIndexBP].pin_page()
 
         schema = '' #aded schema encoding here because it's where I iterate through the data anyway
+        tempBaseSchema = self.frames[curFrameIndexBP].schema_encoding[rid[2]]
+        self.frames[curFrameIndexBP].schema_encoding[rid[2]] = ''
         for j in range(len(columns)):
             if columns[j] != None:
                 self.frames[frame_index].frameData[j].write(columns[j])
                 schema = schema + '1'
 
-                self.frames[curFrameIndexBP].schema_encoding[j] = 1
+                self.frames[curFrameIndexBP].schema_encoding[rid[2]] += '1'
             else:
                 self.frames[frame_index].frameData[j].write(record.columns[j])
                 schema = schema + '0'
+                if tempBaseSchema[j] == '1':
+                    self.frames[curFrameIndexBP].schema_encoding[rid[2]] += '1'
+                else:
+                    self.frames[curFrameIndexBP].schema_encoding[rid[2]] += '0'
 
         self.frames[frame_index].schema_encoding.append(schema) #puts the schema encoding in
         self.frames[frame_index].numRecords += 1

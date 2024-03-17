@@ -185,6 +185,13 @@ class Table:
         #print('Rec:' + str(self.curRecord))
         #print('BP:' + str(self.curBP))
         #check if pageRange and basePage need to be updated
+
+    def insertCommit(self, *columns):
+        rid = self.index.locate(0, columns[0])
+        rid = self.page_directory[rid]
+
+        self.lockRelease(rid, 'W')
+        #print("releasing lock")
             
     def lockAcquire(self, rid, lock_type):
         successfulLock = False
@@ -229,6 +236,7 @@ class Table:
         RID = self.createBP_RID()
 
         self.lockAcquire(RID, 'W')
+        #print("acquiring lock")
 
         self.page_directory[RID] = RID
         indirection = RID

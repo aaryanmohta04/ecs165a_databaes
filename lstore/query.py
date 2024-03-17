@@ -35,17 +35,21 @@ class Query:
     # Return True upon succesful insertion
     # Returns False if insert fails for whatever reason
     """
-    def insert(self, *columns, rollback=False):
+    def insert(self, *columns, rollback=False, commit=False):
         if rollback == True:
             #self.delete(columns[0]) #can use this if it's causing errors
             start_time = 0
             schema_encoding = ''
             self.table.insertRec(start_time, schema_encoding, *columns, rollback=True)
 
+        elif commit == True:
+            self.table.insertCommit(*columns)
+
         else:
             start_time = datetime.now().strftime("%Y%m%d%H%M%S")
             schema_encoding = '0' * self.table.num_columns  #add '0000...' for schema_encoding
             self.table.insertRec(start_time, schema_encoding, *columns) #call function in Table.py to insert record
+
         return True
         
 
@@ -67,41 +71,47 @@ class Query:
     # Returns False if record locked by TPL
     # Assume that select will never be called on a key that doesn't exist
     """
-    def select(self, search_key, search_key_index, projected_columns_index):
+    def select(self, search_key, search_key_index, projected_columns_index, rollback = False, commit = False):
         if self.table.index.indices[search_key_index] == None:
             # find rids without the index
             pass
+
+        if rollback == True:
+            print('select rollback')
+        elif commit == True:
+            print('select commit')
+        else:
         
-        rids = self.table.index.locate(search_key_index, search_key)
-        records = []
-        if isinstance(rids, tuple):
-            rid = rids
-            rid = self.table.page_directory[rid]
-            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
-            newrid = []
-            key_directory = (rid[0], rid[1], 'b')
-            newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
-            if (newrid == [0,0,0,'d']):
-                print("error, tried selecting deleted record")
-            rid = newrid
-            TPS = [0,0]
-            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
-            records.append(record)
+            rids = self.table.index.locate(search_key_index, search_key)
+            records = []
+            if isinstance(rids, tuple):
+                rid = rids
+                rid = self.table.page_directory[rid]
+                frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                newrid = []
+                key_directory = (rid[0], rid[1], 'b')
+                newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+                if (newrid == [0,0,0,'d']):
+                    print("error, tried selecting deleted record")
+                rid = newrid
+                TPS = [0,0]
+                record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+                records.append(record)
+                return records
+                
+            for rid in rids:
+                rid = self.table.page_directory[rid]
+                frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                newrid = []
+                key_directory = (rid[0], rid[1], 'b')
+                newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+                if (newrid == [0,0,0,'d']):
+                    print("error, tried selecting deleted record")
+                rid = newrid
+                TPS = [0,0]
+                record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+                records.append(record)
             return records
-            
-        for rid in rids:
-            rid = self.table.page_directory[rid]
-            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
-            newrid = []
-            key_directory = (rid[0], rid[1], 'b')
-            newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
-            if (newrid == [0,0,0,'d']):
-                print("error, tried selecting deleted record")
-            rid = newrid
-            TPS = [0,0]
-            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
-            records.append(record)
-        return records
         pass
     
 
@@ -144,7 +154,7 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
-    def update(self, primary_key, *columns, rollback=False):
+    def update(self, primary_key, *columns, rollback=False, commit=False):
         rid = self.table.index.locate(self.table.key, primary_key)
         #Add values in columns to each index
         for i in range(len(columns)):
@@ -152,6 +162,8 @@ class Query:
             #Need to delete the key:rid prior to update
         if(rollback == True):
             self.rollBackUpdate(primary_key, *columns)
+        elif(commit == True):
+            print('update commit')
         else:    
             BaseRID = rid
             rid = self.table.page_directory[rid]
