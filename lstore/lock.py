@@ -1,4 +1,5 @@
 from threading import Thread, Lock
+from lstore.lock_manager import lockEntry, lock_manager
 
 class lock:
 

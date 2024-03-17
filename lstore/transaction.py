@@ -25,7 +25,8 @@ class Transaction:
     # If you choose to implement this differently this method must still return True if transaction commits or False on abort
     def run(self):
         for query, args in self.queries:
-            result = query(*args)
+            result = query(*args) 
+            #this is where log function can go to record what's being done and what what in the place previously?
             # If the query has failed the transaction should abort
             if result == False:
                 return self.abort()
@@ -38,6 +39,6 @@ class Transaction:
 
     
     def commit(self):
-        # TODO: commit to database
+        #commit to database
         return True
 

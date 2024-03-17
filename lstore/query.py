@@ -1,5 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+from lstore.lock import lock
 from datetime import datetime
 import numpy as np
 class Query:
