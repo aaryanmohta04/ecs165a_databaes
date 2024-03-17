@@ -189,18 +189,18 @@ class Table:
         if self.lock_manager.search(rid) == False: #should update the curIndex in lock_manager
             self.lock_manager.insert(rid, lock())
 
-            if  lock_type == 'R':
-                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+            if lock_type == 'R':
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo.canRLock()
                 return successfulLock
             elif lock_type == 'W':
-                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo.canWLock()
                 return successfulLock
         else:
-            if  lock_type == 'R':
-                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+            if lock_type == 'R':
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo.canRLock()
                 return successfulLock
             elif lock_type == 'W':
-                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo.canWLock()
                 return successfulLock
             
     def lockRelease(self, rid, lock_type):
@@ -209,7 +209,10 @@ class Table:
         else:
             self.lock_manager.search(rid)
             
-        pass
+            if lock_type == 'R':
+                self.lock_manager[self.lock_manager.curIndex].lockInfo.releaseRLock()
+            elif lock_type == 'W':
+                self.lock_manager[self.lock_manager.curIndex].lockInfo.releaseWLock()
 
     
     def insertRec(self, start_time, schema_encoding, *columns, rollback=False):

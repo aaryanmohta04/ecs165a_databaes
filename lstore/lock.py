@@ -27,10 +27,12 @@ class lock:
             return False
         
     def releaseRLock(self):
-        self.mutex.release()
-        self.numRLock -= 1
+        if self.numRLock > 0:
+            self.mutex.release()
+            self.numRLock -= 1
 
     def releaseWLock(self):
-        self.mutex.release()
-        self.numWLock -= 1
+        if self.numWLock > 0:
+            self.mutex.release()
+            self.numWLock -= 1
         
