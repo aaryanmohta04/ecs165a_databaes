@@ -17,7 +17,7 @@ class Transaction:
     # t = Transaction()
     # t.add_query(q.update, grades_table, 0, *[None, 1, None, 2, None])
     """
-    def add_query(self, query, table, *args):
+    def add_query(self, query, table=Table, *args):
         self.queries.append((query, args))
         self.table = table
         self.rollback = []
