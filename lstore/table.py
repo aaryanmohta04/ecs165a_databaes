@@ -195,7 +195,7 @@ class Table:
                 self.curBP = 0
             else:
                 self.updateCurBP()
-        for i in len(columns):
+        for i in range(len(columns)):
             self.index.add_node(i, columns[i],RID)
 
         
@@ -221,7 +221,6 @@ class Table:
         projected_columns_index = [] #creates array to tell which columns need to be raplced with base page record entry (done later)
         for i in range(self.num_columns):
             projected_columns_index.append(1)
-        
         self.curFrameIndexBP = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name) #load base page of record to update and return record for the base page rid (also sets self.curFrameIndex to bp we loaded)
         currentRID = self.bufferpool.frames[self.curFrameIndexBP].indirection[rid[2]] #find the rid in the indirection column of the record we're updating to get the most recently updated rid
         try:    

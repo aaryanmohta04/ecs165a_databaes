@@ -1,7 +1,7 @@
 from lstore.table import Table, Record
 from lstore.index import Index
 from datetime import datetime
-
+import numpy as np
 class Query:
     """
     # Creates a Query object that can perform different queries on the specified table 
@@ -24,16 +24,10 @@ class Query:
         primary_key_column = 0 
         rid = self.table.index.locate(primary_key_column, primary_key)
         rid = self.table.page_directory[rid]
-        self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] = ["empty"]
-        pass
-    
-    # def testQuery(self):
-    #     self.table.bufferpool.load_base_page(0, 0, self.table.num_columns, self.table.name)
-    #     print(self.table.bufferpool.frames[0].numRecords)
-    #     #print(self.table.bufferpool.frames[0].rid[0])
-    #     #print(self.table.bufferpool.frames[0].indirection[0])
-    #     #print(self.table.bufferpool.frames[0].TPS[0])
-    #     print(self.table.bufferpool.frames[0].frameData[0].get_value(0))
+        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+        newrid = []
+        key_directory = (rid[0], rid[1], 'b')
+        self.table.bufferpool.frames[frame_index].indirection[rid[2]] = [0,0,0, 'd']
     
     """
     # Insert a record with specified columns
@@ -69,20 +63,22 @@ class Query:
         # if self.table.index.has_index(search_key_index) == False:
         #     self.table.index.create_index(search_key_index)
         
-        rids = self.table.index.locate(search_key_index, search_key)
+        rid = self.table.index.locate(search_key_index, search_key)
         records = []
-        for rid in rids:
+        # for rid in rids:
         # rid = self.table.page_directory[rid]
-            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
-            newrid = []
-            key_directory = (rid[0], rid[1], 'b')
-            newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
-            rid = newrid
+        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+        newrid = []
+        key_directory = (rid[0], rid[1], 'b')
+        newrid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+        if (newrid == [0,0,0,'d']):
+            print("error, tried selecting deleted record")
+        rid = newrid
         # TPS = (self.table.bufferpool.frames[frame_index].TPS[rid[2]])
         # print(TPS)
-            TPS = [0,0]
-            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
-            records.append(record)
+        TPS = [0,0]
+        record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+        records.append(record)
         return records
         pass
     
@@ -99,23 +95,26 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
-        rids = self.table.index.locate(search_key_index, search_key)
-        for rid in rids: 
+            rid = self.table.index.locate(search_key_index, search_key)
+        # for rid in rids: 
             baseRID = rid
-            rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same  
+            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+            rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same  
             while relative_version != 0: 
                 if(rid[3] == 'b'):
-                    if(rid != baseRID):
-                        rid = self.table.pageRange[rid[0]].basePages[rid[1]].indirection[rid[2]]
+                    if(tuple(rid) != baseRID):
+                        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                        rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
                 else: 
-                    rid = self.table.pageRange[rid[0]].tailPages[rid[1]].indirection[rid[2]]
+                    frame_index = self.table.bufferpool.load_tail_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                    rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
                 relative_version += 1
-        records = []
-        for rid in rids:
-            record = self.table.find_record(search_key, rid, projected_columns_index, TPS)
+            records = []
+        # for rid in rids:
+            record = self.table.find_record(search_key, rid, projected_columns_index, [0,0])
             records.append(record)
-        return records
-        pass
+            return records
+            pass
 
     
     """
@@ -124,54 +123,12 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
-        rids = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
-        for rid in rids:
-            for i in len(columns):
-                self.table.index.indices[i][columns[i]] = rid
-            BaseRID = rid #sets baseRID to the rid found with key
+        rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
+        BaseRID = rid #sets baseRID to the rid found with key
         #oldRID = rid looks like it's the same as currentRID? so probably not needed
-            rid = self.table.page_directory[rid] #sets rid to the physical location of record using page_directory
+        rid = self.table.page_directory[rid] #sets rid to the physical location of record using page_directory
+        self.table.updateRec(rid, BaseRID, primary_key, *columns)
 
-            self.table.updateRec(rid, BaseRID, primary_key, *columns)
-
-        # pageRangeIndex = rid[0]
-        # pageIndex = rid[1]
-        # recordIndex = rid[2]
-        # currentRid = self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] #finds currentRID by going into pageRange array in Table.py, then basePages array in Page.py at correct index given by RID, then into the indirection array at the correct index (rid[2] = index of page = original location of record when inserted)
-
-        # projected_columns_index = []
-        # for i in range(self.table.num_columns):
-        #     projected_columns_index.append(1)
-        # record = self.table.find_record(primary_key, currentRid, projected_columns_index, TPS)
-        # currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1
-        # if currentTP == -1: #if no tail pages exist, it'll be set to -1, so set it to 0
-        #     currentTP = 0
-        # if len(self.table.pageRange[pageRangeIndex].tailPages) == 0: #checks if a tailPage has ever been created
-        #         self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns) 
-        #         currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
-        # elif self.table.pageRange[pageRangeIndex].tailPages[currentTP].has_capacity() == False: #check if current tailPage has capacity
-        #     self.table.pageRange[pageRangeIndex].add_tail_page(self.table.num_columns)
-        #     currentTP = self.table.pageRange[pageRangeIndex].num_tail_pages - 1 #update current TP
-        #tailPage = self.table.pageRange[rid[0]].tailPages[self.table.pageRange[rid[0]].num_tail_pages()-1] not sure iff can do this because the data type would be a tailPage object (Page.py not in here) | even necessary? can get the current tailPage by going to number of tailpages - 1
-        # self.table.pageRange[pageRangeIndex].tailPages[currentTP].insertRecTP(*columns, record = record) #calls the insertion of record in Page.py (insertRecTP)
-        # self.table.pageRange[pageRangeIndex].tailPages[currentTP].indirection.append(oldRID) #sets indirection of updated record to previous update
-        # self.table.pageRange[pageRangeIndex].tailPages[currentTP].BaseRID.append(BaseRID)
-        # newRecordIndex = self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1
-        # updateRID = (pageRangeIndex, currentTP, self.table.pageRange[pageRangeIndex].tailPages[currentTP].num_records - 1, 't') #could pass these to a function in table to stay consistent, but this works fine
-        # self.table.page_directory[updateRID] = updateRID 
-        # self.table.pageRange[pageRangeIndex].tailPages[currentTP].rid.append(updateRID) #updates the RID of updated record
-        # self.table.pageRange[pageRangeIndex].basePages[pageIndex].indirection[recordIndex] = updateRID #also puts new RID of updated record into basePages indirection to point to newest updated record
-        # for i in range(self.table.num_columns): #for each column, check if schema is 1 in tail page, and if so, set it to 1 in base page
-        #     if  self.table.pageRange[pageRangeIndex].tailPages[currentTP].schema_encoding[newRecordIndex][i] == 1:
-        #            self.table.pageRange[pageRangeIndex].basePages[pageIndex].schema_encoding[recordIndex][i] = 1
-        
-        #need the RID somehow (index?) (Done???)
-        #use the key or RID to get the right record in Table.py (DONE)
-        #in Table.py, can check if tail record is full or needs to be made (DONE)
-        #can then call insertRecTP (DONE)
-
-        #will have to update tailPage (schema, indirection, records, RID) (DONE)
-        #will have to update base page record (schema, indirection)
         pass
 
     
@@ -218,28 +175,26 @@ class Query:
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
         rids = self.table.index.locate_range(start_range,end_range, aggregate_column_index)
         sum = 0
+        records = []
         relative_version_copy = relative_version
-        for i in range(len(rids)): 
-            baseRID = rids[i]
-            baseRID = self.table.page_directory[baseRID]
-            rids[i] = self.table.page_directory[rids[i]]
-            rids[i] = self.table.pageRange[rids[i][0]].basePages[rids[i][1]].indirection[rids[i][2]] # converts base page rid to tail rid if any, else remains same
-
+        for rid in rids: 
             relative_version = relative_version_copy
+            baseRID = rid
+            frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+            rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]] # converts base page rid to tail rid if any, else remains same  
             while relative_version != 0: 
-                if(rids[i][3] == 'b'):
-                    if(rids[i] != baseRID):
-                        rids[i] = self.table.pageRange[rids[i][0]].basePages[rids[i][1]].indirection[rids[i][2]]
+                if(rid[3] == 'b'):
+                    if(tuple(rid) != baseRID):
+                        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                        rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
                 else: 
-                    rids[i] = self.table.pageRange[rids[i][0]].tailPages[rids[i][1]].indirection[rids[i][2]]
+                    frame_index = self.table.bufferpool.load_tail_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                    rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
                 relative_version += 1
-
-        for rid in rids:
-            if(rid[3] == 'b'):
-                column = self.table.pageRange[rid[0]].basePages[rid[1]].pages[aggregate_column_index].data
-            else:
-                column = self.table.pageRange[rid[0]].tailPages[rid[1]].pages[aggregate_column_index].data
-            sum += (int.from_bytes(column[rid[2]*8:rid[2]*8 + 8], byteorder = 'big'))
+            record = self.table.find_record(0, rid, [1,1,1,1,1], [0,0])
+            records.append(record)
+        for record in records: 
+            sum += record.columns[aggregate_column_index]
         return sum
         pass
 
