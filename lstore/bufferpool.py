@@ -575,7 +575,6 @@ class Bufferpool:
     def write_numRecords(self, path, numCols, curIndex):
         tempPage = Page()
         tempPage.write(self.frames[curIndex].numRecords)
-        print("writing: ", self.frames[curIndex].numRecords)
         tempPage.write_to_disk(path, tempPage.data, numCols)
 
     def close(self, tablename):
@@ -594,7 +593,6 @@ class Bufferpool:
                 self.write_baseRid(path, frame_size + 9, i)
                 self.write_numRecords(path, frame_size + 13, i)
                 
-            print("closing and writing to path : " + path)    
             for j in range(frame_size):
                 self.frames[i].frameData[j].write_to_disk(path, self.frames[i].frameData[j].data, j)
             self.write_rid(path, frame_size, i)

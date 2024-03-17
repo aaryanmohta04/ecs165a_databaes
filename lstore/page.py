@@ -45,14 +45,12 @@ class Page:
         return val
         
     def read_from_disk(self, path, col):
-        print("reading from ", path)
         file = open(path, "rb")
         file.seek(col * 4096) #go to specific field
         self.data = bytearray(file.read(4096))
         file.close()
 
     def write_to_disk(self, path, data, col):
-        print("opening to write to disk: " + path)
         file = open(path, "rb+")
         file.seek(col * 4096) #go to specific field
         file.write(data)
