@@ -11,6 +11,7 @@ class TransactionWorker:
         self.transactions = transactions
         self.result = 0
         self.thread = threading
+        self.varthread = ""
         pass
 
     
@@ -25,9 +26,8 @@ class TransactionWorker:
     Runs all transaction as a thread
     """
     def run(self):
-        self.thread.Thread(self.__run)
-        self.thread.start()
-        #self.__run()
+        self.varthread = self.thread.Thread(target= self.__run())
+        self.varthread.start()
         pass
         # here you need to create a thread and call __run
     
@@ -36,6 +36,7 @@ class TransactionWorker:
     Waits for the worker to finish
     """
     def join(self):
+        self.varthread.join()
         pass
 
 

@@ -129,15 +129,36 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns, rollback=False):
-        rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
-        BaseRID = rid #sets baseRID to the rid found with key
-        #oldRID = rid looks like it's the same as currentRID? so probably not needed
-        rid = self.table.page_directory[rid] #sets rid to the physical location of record using page_directory
-        self.table.updateRec(rid, BaseRID, primary_key, *columns)
-        return True
-
+        if(rollback == True):
+            self.rollBackUpdate(primary_key, *columns)
+        else:
+            rid = self.table.index.locate(self.table.key, primary_key) #gets rid using key in index
+            BaseRID = rid #sets baseRID to the rid found with key
+            #oldRID = rid looks like it's the same as currentRID? so probably not needed
+            rid = self.table.page_directory[rid] #sets rid to the physical location of record using page_directory
+            self.table.updateRec(rid, BaseRID, primary_key, *columns)
+            return True
         pass
-
+    
+    def rollBackUpdate(self, primary_key, *columns):
+        rid = self.table.index.locate(0, primary_key)
+        baseRID = rid
+        rollBackRID = rid
+        frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+        rid = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+        if(rid[3] == 'b'):
+            if(tuple(rid) != baseRID):
+                frame_index = self.table.bufferpool.load_base_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+                rollBackRID = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+        else: 
+            frame_index = self.table.bufferpool.load_tail_page(rid[0], rid[1], self.table.num_columns, self.table.name)
+            rollBackRID = self.table.bufferpool.frames[frame_index].indirection[rid[2]]
+        
+        frame_index = self.table.bufferpool.load_base_page(baseRID[0], baseRID[1], self.table.num_columns, self.table.name)
+        self.table.bufferpool.frames[frame_index].indirection[baseRID[2]] = rollBackRID 
+        pass
+        
+    
     
     """
     :param start_range: int         # Start of the key range to aggregate 
