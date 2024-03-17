@@ -115,21 +115,19 @@ class Table:
          # updating rid to the latest version of the record. 
         if(rid[3]== 't'):
             frame_index = self.bufferpool.load_tail_page(rid[0], rid[1], self.num_columns, self.name)
-            key_directory = (rid[0], rid[1], 't')
-            if self.greaterthan(TPS, [rid[1], rid[2]]):     
-                rid = self.bufferpool.frames[frame_index].BaseRID[rid[2]]
-                frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
-                key_directory = (rid[0], rid[1], 'b')
+
+            # if self.greaterthan(TPS, [rid[1], rid[2]]):     
+            #     rid = self.bufferpool.frames[frame_index].BaseRID[rid[2]]
+            #     frame_index = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
                 
             data = self.bufferpool.extractdata(frame_index, self.num_columns, rid[2])
 
-        record = []
         
         if(rid[3] == 'b'):
             self.curFrameIndexBP = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
-            key_directory = (rid[0], rid[1], 'b')
             data = self.bufferpool.extractdata(self.curFrameIndexBP, self.num_columns, rid[2])
 
+        record = []
         for i in range(len(projected_columns_index)):
             if (projected_columns_index[i] == 1):
                 record.append(data[i])
@@ -192,19 +190,6 @@ class Table:
         
         self.curFrameIndexBP = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
 
-        # if self.curBP_has_Capacity(frame_index) == False:
-        #     if self.curPR_has_Capacity(self.curPageRange):
-        #         self.curBP += 1
-        #         self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name, self.curRecord)
-        #         self.updateCurRecord()
-        #     else:
-        #         self.curPageRange += 1
-        #         self.bufferpool.allocate_page_range(self.num_columns, self.curPageRange)
-        #         self.curBP = 0
-        #         self.updateCurRecord()
-
-
-
         RID = self.createBP_RID()
         self.page_directory[RID] = RID
         indirection = RID
@@ -221,24 +206,6 @@ class Table:
         for i in range(len(columns)):
             self.index.add_node(i, columns[i],RID)
 
-        
-        #     if self.pageRange[self.curPageRange].has_capacity():  #checks if current page range is full
-        #          self.pageRange[self.curPageRange].add_base_page(self.num_columns) #if not, adds base page
-        #          self.updateCurBP()
-        #          self.updateCurRecord()                             #updates current BP to new BP
-        #     else: #if is
-        #          self.add_page_range(self.num_columns)          #add a new page range
-        #          self.updateCurBP()                             #adding a new page range should have set the current page range 
-        #          self.updateCurRecord()
-        #                                                         # to the new one and added a new base page to it
-                                                                      
-        # RID  = self.createBP_RID()                        #create RID for inserted record (inserts can only be for BP)
-        # self.page_directory[RID] = RID
-        # indirection = RID                                       #add RID to indirection column since this is insert, not update
-        # self.getCurBP().insertRecBP(RID, start_time, schema_encoding, indirection, *columns) #now insert                                           #update table's numRecordss
-        # self.updateCurRecord()                                  #update record index for current BP
-        # key = columns[0]
-        # self.index.add_node(key,RID)
 
     def updateRec(self, rid, baseRID, primary_key, *columns):
         projected_columns_index = [] #creates array to tell which columns need to be raplced with base page record entry (done later)
@@ -273,19 +240,6 @@ class Table:
         self.page_directory[updateRID] = updateRID
         # self.table.bufferpool.frames[self.curFrameIndexTP].indirection.append(currentRID) #make current indirection of bp the indirection of tp (DOING IT IN BUFFERPOOL.PY)
         # self.table.bufferpool.frames[self.curFrameIndexTP].BaseRID.append(baseRID)
-
-
-        
-
-        
-
-
-        
-
-
-
-
-
     
     def __merge(self, PageRangeIndex):
         # function called on a page range when a certain limit is reached
@@ -331,24 +285,6 @@ class Table:
 
 
         # NEXT STEP IS TO UPDATE PAGE DIRECTORY. (do this by swapping newpagedirectory and self.table.page_directory on the main thread)INDIRECTION COLUMNS FOR THESE UPDATES MADE ABOVE ARE flimsy, and sum, select, update need to be changed to check TPS as well
-              
-
-
-
-            
-            
-
-            
-            
-
-
-        #  # steps to implement: 
-        #     figure out the background thread part
-        #     create a duplicate page range with merged pages. 
-        #     implement TPS for consolidated merged pages. 
-        #     update indirection columns to actually be correct. 
-        #     update the page directory on the main thread. 
-        #     add page range, update current pages?
         print("merge is happening")
 
         pass
