@@ -1,5 +1,3 @@
-CAPACITY = 100000
-
 class lockEntry:
 
     def __init__(self, rid, lock):

@@ -19,14 +19,20 @@ class Transaction:
     """
     def add_query(self, query, table, *args):
         self.queries.append((query, args))
+        self.table = table
+        self.rollback = []
+        self.queryIndex = 0
         # use grades_table for aborting
 
         
     # If you choose to implement this differently this method must still return True if transaction commits or False on abort
     def run(self):
         for query, args in self.queries:
-            result = query(*args) 
-            #this is where log function can go to record what's being done and what what in the place previously?
+            result = query(*args)
+            if result == True:
+                self.rollback.append(True)
+                #print(self.queries[self.queryIndex][0])
+            self.queryIndex += 1
             # If the query has failed the transaction should abort
             if result == False:
                 return self.abort()
@@ -34,11 +40,12 @@ class Transaction:
 
     
     def abort(self):
-        #TODO: do roll-back and any other necessary operations
+        for i in range(self.queryIndex):
+            if self.rollback[i] == True:
+                self.queries[i][0](*self.queries[i][1], rollback=True)
         return False
 
     
     def commit(self):
-        #commit to database
         return True
 

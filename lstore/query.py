@@ -35,10 +35,15 @@ class Query:
     # Return True upon succesful insertion
     # Returns False if insert fails for whatever reason
     """
-    def insert(self, *columns):
-        start_time = datetime.now().strftime("%Y%m%d%H%M%S")
-        schema_encoding = '0' * self.table.num_columns  #add '0000...' for schema_encoding
-        self.table.insertRec(start_time, schema_encoding, *columns) #call function in Table.py to insert record
+    def insert(self, *columns, rollback=False):
+        if rollback == True:
+            print("rollback")
+            return True
+
+        else:
+            start_time = datetime.now().strftime("%Y%m%d%H%M%S")
+            schema_encoding = '0' * self.table.num_columns  #add '0000...' for schema_encoding
+            self.table.insertRec(start_time, schema_encoding, *columns) #call function in Table.py to insert record
         return True
         
 
@@ -137,7 +142,7 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
-    def update(self, primary_key, *columns):
+    def update(self, primary_key, *columns, rollback=False):
         rid = self.table.index.locate(self.table.key, primary_key)
         
         #Add values in columns to each index
@@ -148,6 +153,7 @@ class Query:
         BaseRID = rid
         rid = self.table.page_directory[rid]
         self.table.updateRec(rid, BaseRID, primary_key, *columns)
+        return True
 
         pass
 
