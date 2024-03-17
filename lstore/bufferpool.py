@@ -512,6 +512,8 @@ class Bufferpool:
                     tempPage.write(0)
                 elif self.frames[curIndex].indirection[j][i] == 't':
                     tempPage.write(1)
+                elif self.frames[curIndex].indirection[j][i] == 'd':
+                    tempPage.write(2)
                 else:
                     tempPage.write(self.frames[curIndex].indirection[j][i])
 

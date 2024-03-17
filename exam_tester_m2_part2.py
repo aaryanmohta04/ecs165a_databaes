@@ -15,8 +15,6 @@ query = Query(grades_table)
 # dictionary for records to test the database: test directory
 records = {}
 
-# query.testQuery()
-
 number_of_records = 1000
 number_of_aggregates = 100
 number_of_updates = 1
@@ -45,7 +43,7 @@ for key in keys:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record, ', correct:', records[key])
+        print('select error on', key, ':', record.columns, ', correct:', records[key])
 print("Select for version -1 finished")
 
 # Check records that were presisted in part 1
@@ -56,7 +54,7 @@ for key in keys:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record, ', correct:', records[key])
+        print('select error on', key, ':', record.columns, ', correct:', records[key])
 print("Select for version -2 finished")
 
 for key in keys:
