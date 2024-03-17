@@ -185,18 +185,23 @@ class Table:
         #check if pageRange and basePage need to be updated
             
     def lockAcquire(self, rid, lock_type):
+        successfulLock = False
         if self.lock_manager.search(rid) == False: #should update the curIndex in lock_manager
             self.lock_manager.insert(rid, lock())
 
             if  lock_type == 'R':
-                self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+                return successfulLock
             elif lock_type == 'W':
-                self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+                return successfulLock
         else:
             if  lock_type == 'R':
-                self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+                return successfulLock
             elif lock_type == 'W':
-                self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+                successfulLock = self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+                return successfulLock
             
     def lockRelease(self, rid, lock_type):
         if self.lock_manager.search(rid) == False:
