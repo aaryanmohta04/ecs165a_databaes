@@ -146,9 +146,8 @@ class Query:
     """
     def update(self, primary_key, *columns, rollback=False):
         rid = self.table.index.locate(self.table.key, primary_key)
-        
         #Add values in columns to each index
-        for i in len(columns):
+        for i in range(len(columns)):
             self.table.index.indices[i][columns[i]] = rid
             #Need to delete the key:rid prior to update
         if(rollback == True):
