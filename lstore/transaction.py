@@ -57,7 +57,7 @@ class Transaction:
             if result == True or result != None:
                 self.rollback.append(True)
                 #print(self.queries[self.queryIndex][0])
-            self.queryIndex += 1
+                self.queryIndex += 1
             # If the query has failed the transaction should abort
             if result == False:
                 return self.abort()
@@ -72,10 +72,10 @@ class Transaction:
     
     def commit(self):
         for i in reversed(range(self.queryIndex)):
-            self.queries[i][0](*self.queries[i][1], rollback=False, commit=True)
-
+            # self.queries[i][0](*self.queries[i][1], rollback=False, commit=True)
+            pass
         # for i in reversed(range(self.queryIndex)):
         #     if self.rollback[i] == True:
-        #         self.queries[i][0](*self.queries[i][1], rollback=True)
+                # self.queries[i][0](*self.queries[i][1], rollback=True)
         return True
 

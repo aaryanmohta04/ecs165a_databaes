@@ -3,6 +3,7 @@ from lstore.index import Index
 from lstore.lock import lock
 from datetime import datetime
 import numpy as np
+import threading
 class Query:
     """
     # Creates a Query object that can perform different queries on the specified table 

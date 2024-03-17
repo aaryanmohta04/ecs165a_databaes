@@ -9,7 +9,7 @@ import os
 import numpy as np
 import array
 import struct
-
+from threading import Lock
 TABLEKEY = 0
 TABLENUMCOL = 1
 TABLECURPG = 2
@@ -48,6 +48,7 @@ class Table:
         self.curFrameIndexBP = 0
         self.curFrameIndexTP = 0
         self.lock_manager = lock_manager()
+        self.newRecLock = Lock()
         if(isNew):
             self.add_page_range(self.num_columns)
 
@@ -227,17 +228,16 @@ class Table:
     def insertRec(self, start_time, schema_encoding, *columns, rollback=False):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
         #print(rollback)
+        # self.newRecLock.acquire()
         if rollback == True:
             self.insertRollback(*columns)
             return
         
+        # self.lockAcquire(RID, 'W')
         self.curFrameIndexBP = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
 
         RID = self.createBP_RID()
-
-        self.lockAcquire(RID, 'W')
         #print("acquiring lock")
-
         self.page_directory[RID] = RID
         indirection = RID
         self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
@@ -252,9 +252,12 @@ class Table:
                 self.updateCurBP()
         for i in range(len(columns)):
             self.index.add_node(i, columns[i],RID)
+        print(RID)
+        # self.newRecLock.release()
 
 
     def updateRec(self, rid, baseRID, primary_key, *columns):
+        print(rid,end = "")
         projected_columns_index = [] #creates array to tell which columns need to be raplced with base page record entry (done later)
         for i in range(self.num_columns):
             projected_columns_index.append(1)
@@ -273,7 +276,6 @@ class Table:
 
         if not numTPS == 0:
             numTPS -= 1 #make sure we're checking the existing tail page first because it might have capacity
-
         self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name) #load tail page we need, will also check if current tail page is full, and if is, will allocate space for a new one and add to there instead
 
         if self.bufferpool.frames[self.curFrameIndexTP].has_capacity() == FALSE: #if tail page is full, allocate new one, and load it
@@ -282,6 +284,7 @@ class Table:
             self.curFrameIndexTP = self.bufferpool.load_tail_page(rid[0], numTPS, self.num_columns, self.name)
 
         updateRID = (rid[0], numTPS, self.bufferpool.frames[self.curFrameIndexTP].numRecords, 't')
+        print(updateRID, " | ", end = "")
         self.bufferpool.insertRecTP(record, rid, updateRID, currentRID, baseRID, self.curFrameIndexBP, *columns)
 
         self.page_directory[updateRID] = updateRID
