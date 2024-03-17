@@ -165,8 +165,27 @@ class Table:
         #return self.pageRange[RID[0]].basePages[RID[1]].pages[0] + 8*RID[3]
         return self.pageRange[RID[0]].basePages[RID[1]].pages[0].data[8*RID[2]]
     
-    def insertRec(self, start_time, schema_encoding, *columns):
+    def insertRollback(self, *columns):
+        rid = self.index.locate(0, columns[0])
+        rid = self.page_directory[rid]
+
+        self.curFrameIndexBP = self.bufferpool.load_base_page(rid[0], rid[1], self.num_columns, self.name)
+
+        self.bufferpool.deleteRec(rid, self.curFrameIndexBP, self.num_columns)
+
+        self.curRecord -= 1  #reset current index for record, pagerange, bp
+        if(self.curRecord == -1):
+            self.curPageRange -= 1
+        elif(self.curRecord % 511 == 0):
+            self.curBP -= 1
+        #check if pageRange and basePage need to be updated
+    
+    def insertRec(self, start_time, schema_encoding, *columns, rollback=False):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
+        if rollback == True:
+            self.insertRollback(*columns)
+            return
+        
         self.curFrameIndexBP = self.bufferpool.load_base_page(self.curPageRange, self.curBP, self.num_columns, self.name)
 
         # if self.curBP_has_Capacity(frame_index) == False:

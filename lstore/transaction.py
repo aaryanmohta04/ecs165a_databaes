@@ -40,7 +40,7 @@ class Transaction:
 
     
     def abort(self):
-        for i in range(self.queryIndex):
+        for i in reversed(range(self.queryIndex)):
             if self.rollback[i] == True:
                 self.queries[i][0](*self.queries[i][1], rollback=True)
         return False

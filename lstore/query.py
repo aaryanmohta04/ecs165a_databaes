@@ -37,8 +37,10 @@ class Query:
     """
     def insert(self, *columns, rollback=False):
         if rollback == True:
-            print("rollback")
-            return True
+            #self.delete(columns[0]) #can use this if it's causing errors
+            start_time = 0
+            schema_encoding = ''
+            self.table.insertRec(start_time, schema_encoding, *columns, rollback=True)
 
         else:
             start_time = datetime.now().strftime("%Y%m%d%H%M%S")
