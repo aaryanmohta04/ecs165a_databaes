@@ -47,8 +47,8 @@ class Transaction:
 
     
     def commit(self):
-        for i in reversed(range(self.queryIndex)):
-            if self.rollback[i] == True:
-                self.queries[i][0](*self.queries[i][1], rollback=True)
+        # for i in reversed(range(self.queryIndex)):
+        #     if self.rollback[i] == True:
+        #         self.queries[i][0](*self.queries[i][1], rollback=True)
         return True
 

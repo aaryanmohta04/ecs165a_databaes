@@ -26,4 +26,11 @@ class lock:
         else:
             return False
         
-        #if you need to release at some point, you can call it with "lock object name".mutex.release
+    def releaseRLock(self):
+        self.mutex.release()
+        self.numRLock -= 1
+
+    def releaseWLock(self):
+        self.mutex.release()
+        self.numWLock -= 1
+        

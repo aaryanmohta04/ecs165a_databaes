@@ -3,6 +3,8 @@ from lstore.page import Page #added Page because pdf says Table uses Page intern
 from time import time
 from lstore.page import PageRange
 from lstore.bufferpool import *
+from lstore.lock import *
+from lstore.lock_manager import *
 import os
 import numpy as np
 import array
@@ -45,6 +47,7 @@ class Table:
         self.curRecord = 0
         self.curFrameIndexBP = 0
         self.curFrameIndexTP = 0
+        self.lock_manager = lock_manager()
         if(isNew):
             self.add_page_range(self.num_columns)
 
@@ -182,6 +185,29 @@ class Table:
         #print('Rec:' + str(self.curRecord))
         #print('BP:' + str(self.curBP))
         #check if pageRange and basePage need to be updated
+            
+    def lockAcquire(self, rid, lock_type):
+        if self.lock_manager.search(rid) == False: #should update the curIndex in lock_manager
+            self.lock_manager.insert(rid, lock())
+
+            if  lock_type == 'R':
+                self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+            elif lock_type == 'W':
+                self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+        else:
+            if  lock_type == 'R':
+                self.lock_manager[self.lock_manager.curIndex].lockInfo(canRLock)
+            elif lock_type == 'W':
+                self.lock_manager[self.lock_manager.curIndex].lockInfo(canWLock)
+            
+    def lockRelease(self, rid, lock_type):
+        if self.lock_manager.search(rid) == False:
+            return False
+        else:
+            self.lock_manager.search(rid)
+            
+        pass
+
     
     def insertRec(self, start_time, schema_encoding, *columns, rollback=False):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
@@ -206,6 +232,7 @@ class Table:
 
 
         RID = self.createBP_RID()
+
         self.page_directory[RID] = RID
         indirection = RID
         self.bufferpool.insertRecBP(RID, start_time, schema_encoding, indirection, *columns, numColumns = self.num_columns)
