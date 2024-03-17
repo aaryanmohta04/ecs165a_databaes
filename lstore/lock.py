@@ -1,12 +1,13 @@
-from threading import Thread, Lock
 from lstore.lock_manager import lockEntry, lock_manager
+
+import threading
 
 class lock:
 
     def __init__(self):
         self.numRLock = 0
         self.numWLock = 0
-        self.mutex = Lock()
+        self.mutex = threading.Lock()
         pass
 
     def canRLock(self):
