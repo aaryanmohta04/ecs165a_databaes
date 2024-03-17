@@ -493,15 +493,19 @@ class Bufferpool:
     def deleteRec(self, rid, curFrameIndex, numCols):
         self.frames[curFrameIndex].pin_page()
 
-        # for i in range(numCols):
-        #     self.frames[curFrameIndex].frameData[i].write()
+        for i in range(numCols):
+             self.frames[curFrameIndex].frameData[i].num_records -= 1
+             #print('column: ' + str(i) + 'numRec: ' + str(self.frames[curFrameIndex].frameData[i].num_records))
         #don't need to do anything with the actual data in frame cause it should just be overwritten with the next insert since we're resetting the indexes back to what they were before the insert
 
         self.frames[curFrameIndex].rid.pop(rid[2])
         self.frames[curFrameIndex].indirection.pop(rid[2])
         self.frames[curFrameIndex].schema_encoding.pop(rid[2])
-        
+
         self.frames[curFrameIndex].numRecords -= 1
+
+        #print('numRecs:' + str(self.frames[curFrameIndex].numRecords))
+        #print('test:' + str(len(self.frames[curFrameIndex].rid)))
 
         if(rid[3] == 'b'):
             self.frames[curFrameIndex].start_time.pop(rid[2])

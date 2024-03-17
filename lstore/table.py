@@ -176,12 +176,16 @@ class Table:
         self.curRecord -= 1  #reset current index for record, pagerange, bp
         if(self.curRecord == -1):
             self.curPageRange -= 1
-        elif(self.curRecord % 511 == 0):
+        elif(self.curRecord % 511 == 0 and self.curRecord != 0):
             self.curBP -= 1
+
+        #print('Rec:' + str(self.curRecord))
+        #print('BP:' + str(self.curBP))
         #check if pageRange and basePage need to be updated
     
     def insertRec(self, start_time, schema_encoding, *columns, rollback=False):
         # if self.getCurBP().has_capacity() == False:                #checks if current BP is full
+        #print(rollback)
         if rollback == True:
             self.insertRollback(*columns)
             return
